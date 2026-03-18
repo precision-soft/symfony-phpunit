@@ -1,7 +1,7 @@
 {
     "name": "precision-soft/symfony-phpunit",
     "type": "library",
-    "version": "v1.0.1",
+    "version": "v1.1.0",
     "description": "library used to make writing phpunit tests easier",
     "keywords": [
         "symfony",
