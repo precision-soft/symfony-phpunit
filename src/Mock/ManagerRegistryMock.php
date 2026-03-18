@@ -12,7 +12,7 @@ use Closure;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Persistence\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
@@ -108,7 +108,7 @@ class ManagerRegistryMock implements MockDtoInterface
         $mockContainer->registerMockDto(
             new MockDto(
                 ClassMetadata::class,
-                [],
+                null,
                 false,
                 function (MockInterface $mock, MockContainer $mockContainer): void {
                     $mock->shouldReceive('setIdGeneratorType')
