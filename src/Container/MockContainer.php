@@ -23,7 +23,7 @@ class MockContainer
 
     public function registerMockDto(MockDto $mockDto): self
     {
-        if (isset($this->mockDtos[$mockDto->getClass()])) {
+        if (true === isset($this->mockDtos[$mockDto->getClass()])) {
             throw new Exception(
                 \sprintf('mock dto already registered for class `%s`', $mockDto->getClass()),
             );
@@ -36,8 +36,8 @@ class MockContainer
 
     public function getMock(string $class): MockInterface
     {
-        if (!isset($this->mocks[$class])) {
-            if (!isset($this->mockDtos[$class])) {
+        if (false === isset($this->mocks[$class])) {
+            if (false === isset($this->mockDtos[$class])) {
                 throw new Exception(\sprintf('no mock dto found for class `%s`', $class));
             }
 
@@ -49,7 +49,7 @@ class MockContainer
 
     public function registerMock(string $class, MockInterface $mock): self
     {
-        if (isset($this->mocks[$class])) {
+        if (true === isset($this->mocks[$class])) {
             throw new Exception(
                 \sprintf('mock already registered for class `%s`', $class),
             );
@@ -70,7 +70,7 @@ class MockContainer
 
     private function getOrCreateMock(MockDto $mockDto): MockInterface
     {
-        if (isset($this->mocks[$mockDto->getClass()])) {
+        if (true === isset($this->mocks[$mockDto->getClass()])) {
             return $this->mocks[$mockDto->getClass()];
         }
 
@@ -97,12 +97,12 @@ class MockContainer
             $mockedConstruct[] = $mockedDependency;
         }
 
-        $mock = $mockDto->getConstruct() === null ?
+        $mock = null === $mockDto->getConstruct() ?
             Mockery::mock($mockDto->getClass()) : Mockery::mock($mockDto->getClass(), $mockedConstruct);
 
         $this->registerMock($mockDto->getClass(), $mock);
 
-        if ($mockDto->getPartial()) {
+        if (true === $mockDto->getPartial()) {
             $mock->makePartial();
         }
 

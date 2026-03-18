@@ -81,7 +81,7 @@ class ManagerRegistryMock implements MockDtoInterface
                             function (string $entityName, mixed $id): object {
                                 $entity = new $entityName();
 
-                                if (\method_exists($entity, 'setId')) {
+                                if (true === \method_exists($entity, 'setId')) {
                                     $entity->setId($id);
                                 }
 
