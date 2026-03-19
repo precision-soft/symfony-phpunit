@@ -8,7 +8,7 @@
         "phpunit",
         "mockery"
     ],
-    "homepage": "https://gitlab.com/precision-soft-open-source/symfony/phpunit",
+    "homepage": "https://github.com/precision-soft/symfony-phpunit",
     "license": "MIT",
     "authors": [
         {
@@ -40,7 +40,7 @@
     },
     "scripts": {
         "install-hooks": [
-            "[ $COMPOSER_DEV_MODE -eq 1 ] && rm -rf .git/hooks && ln -s ../dev/git-hooks .git/hooks || exit 0"
+            "[ $COMPOSER_DEV_MODE -eq 1 ] && rm -rf .git/hooks && ln -s ../.dev/git-hooks .git/hooks || exit 0"
         ],
         "post-install-cmd": [
             "@install-hooks"
