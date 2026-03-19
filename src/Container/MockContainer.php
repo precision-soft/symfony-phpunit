@@ -97,8 +97,11 @@ class MockContainer
             $mockedConstruct[] = $mockedDependency;
         }
 
-        $mock = null === $mockDto->getConstruct() ?
-            Mockery::mock($mockDto->getClass()) : Mockery::mock($mockDto->getClass(), $mockedConstruct);
+        if (null === $mockDto->getConstruct()) {
+            $mock = Mockery::mock($mockDto->getClass());
+        } else {
+            $mock = Mockery::mock($mockDto->getClass(), $mockedConstruct);
+        }
 
         $this->registerMock($mockDto->getClass(), $mock);
 

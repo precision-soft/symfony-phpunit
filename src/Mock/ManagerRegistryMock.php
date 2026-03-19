@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
+use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 
 class ManagerRegistryMock implements MockDtoInterface
@@ -79,6 +80,10 @@ class ManagerRegistryMock implements MockDtoInterface
                         ->byDefault()
                         ->andReturnUsing(
                             function (string $entityName, mixed $id): object {
+                                if (false === class_exists($entityName)) {
+                                    throw new Exception(\sprintf('class `%s` does not exist', $entityName));
+                                }
+
                                 $entity = new $entityName();
 
                                 if (true === \method_exists($entity, 'setId')) {
