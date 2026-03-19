@@ -51,5 +51,3 @@ cd phpunit
 ```
 
 ## Todo
-
-* Unit tests.

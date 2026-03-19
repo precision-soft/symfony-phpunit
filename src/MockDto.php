@@ -19,7 +19,7 @@ class MockDto
         private readonly ?Closure $onCreate = null,
     ) {}
 
-    public function getClass(): ?string
+    public function getClass(): string
     {
         return $this->class;
     }
@@ -29,7 +29,7 @@ class MockDto
         return $this->construct;
     }
 
-    public function getPartial(): ?bool
+    public function getPartial(): bool
     {
         return $this->partial;
     }
