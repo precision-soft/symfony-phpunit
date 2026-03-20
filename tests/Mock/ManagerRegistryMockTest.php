@@ -15,6 +15,7 @@ use Doctrine\ORM\Id\AbstractIdGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
+use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
 
 /**
@@ -211,5 +212,36 @@ final class ManagerRegistryMockTest extends TestCase
         $connection = $this->mockContainer->getMock(Connection::class);
 
         static::assertInstanceOf(Connection::class, $connection);
+    }
+
+    public function testGetReferenceWithNoArgConstructor(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $entity = $entityManager->getReference(\stdClass::class, 1);
+
+        static::assertInstanceOf(\stdClass::class, $entity);
+    }
+
+    public function testGetReferenceWithRequiredConstructorParams(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $entity = $entityManager->getReference(\ArrayObject::class, 1);
+
+        static::assertInstanceOf(\ArrayObject::class, $entity);
+    }
+
+    public function testGetReferenceWithNonexistentClassThrows(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('does not exist');
+
+        $entityManager->getReference('NonExistentClass', 1);
     }
 }

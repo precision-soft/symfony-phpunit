@@ -18,6 +18,7 @@ use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use ReflectionClass;
 
 class ManagerRegistryMock implements MockDtoInterface
 {
@@ -84,7 +85,14 @@ class ManagerRegistryMock implements MockDtoInterface
                                     throw new Exception(\sprintf('class `%s` does not exist', $entityName));
                                 }
 
-                                $entity = new $entityName();
+                                $reflection = new ReflectionClass($entityName);
+                                $constructor = $reflection->getConstructor();
+
+                                if (null !== $constructor && 0 < $constructor->getNumberOfRequiredParameters()) {
+                                    $entity = $reflection->newInstanceWithoutConstructor();
+                                } else {
+                                    $entity = new $entityName();
+                                }
 
                                 if (true === \method_exists($entity, 'setId')) {
                                     $entity->setId($id);

@@ -44,10 +44,9 @@ final class CreateServiceTest extends AbstractTestCase
 ## Dev
 
 ```shell
-git clone git@gitlab.com:precision-soft-open-source/symfony/phpunit.git
+git clone git@github.com:precision-soft/symfony-phpunit.git
 cd phpunit
 
 ./dc build && ./dc up -d
 ```
 
-## Todo
