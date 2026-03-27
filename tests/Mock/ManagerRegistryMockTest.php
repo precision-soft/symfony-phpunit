@@ -8,15 +8,18 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Test\Mock;
 
+use ArrayObject;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\Id\AbstractIdGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\ManagerRegistry;
+use Mockery;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use stdClass;
 
 /**
  * @internal
@@ -77,7 +80,7 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
 
-        $entityManager->persist(new \stdClass());
+        $entityManager->persist(new stdClass());
 
         static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
     }
@@ -87,7 +90,7 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
 
-        $entityManager->remove(new \stdClass());
+        $entityManager->remove(new stdClass());
 
         static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
     }
@@ -147,7 +150,7 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
 
-        $classMetadata = $entityManager->getClassMetadata(\stdClass::class);
+        $classMetadata = $entityManager->getClassMetadata(stdClass::class);
 
         static::assertInstanceOf(ClassMetadata::class, $classMetadata);
     }
@@ -177,7 +180,7 @@ final class ManagerRegistryMockTest extends TestCase
     {
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
-        $classMetadata = $entityManager->getClassMetadata(\stdClass::class);
+        $classMetadata = $entityManager->getClassMetadata(stdClass::class);
 
         $classMetadata->setIdGeneratorType(1);
 
@@ -188,8 +191,8 @@ final class ManagerRegistryMockTest extends TestCase
     {
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
-        $classMetadata = $entityManager->getClassMetadata(\stdClass::class);
-        $idGenerator = \Mockery::mock(AbstractIdGenerator::class);
+        $classMetadata = $entityManager->getClassMetadata(stdClass::class);
+        $idGenerator = Mockery::mock(AbstractIdGenerator::class);
 
         $classMetadata->setIdGenerator($idGenerator);
 
@@ -219,9 +222,9 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
 
-        $entity = $entityManager->getReference(\stdClass::class, 1);
+        $entity = $entityManager->getReference(stdClass::class, 1);
 
-        static::assertInstanceOf(\stdClass::class, $entity);
+        static::assertInstanceOf(stdClass::class, $entity);
     }
 
     public function testGetReferenceWithRequiredConstructorParams(): void
@@ -229,9 +232,9 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
 
-        $entity = $entityManager->getReference(\ArrayObject::class, 1);
+        $entity = $entityManager->getReference(ArrayObject::class, 1);
 
-        static::assertInstanceOf(\ArrayObject::class, $entity);
+        static::assertInstanceOf(ArrayObject::class, $entity);
     }
 
     public function testGetReferenceWithNonexistentClassThrows(): void

@@ -1,0 +1,21 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined method Mockery\\\\ExpectationInterface\\|Mockery\\\\HigherOrderMessage\\:\\:byDefault\\(\\)\\.$#"
+			count: 1
+			path: src/Mock/EventDispatcherInterfaceMock.php
+
+		-
+			message: "#^Call to an undefined method Mockery\\\\ExpectationInterface\\|Mockery\\\\HigherOrderMessage\\:\\:byDefault\\(\\)\\.$#"
+			count: 14
+			path: src/Mock/ManagerRegistryMock.php
+
+		-
+			message: "#^Call to an undefined method Mockery\\\\ExpectationInterface\\|Mockery\\\\HigherOrderMessage\\:\\:byDefault\\(\\)\\.$#"
+			count: 1
+			path: src/Mock/SluggerInterfaceMock.php
+
+		-
+			message: "#^Method PrecisionSoft\\\\Symfony\\\\Phpunit\\\\MockDto\\:\\:__construct\\(\\) has parameter \\$construct with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/MockDto.php

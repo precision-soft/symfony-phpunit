@@ -32,7 +32,9 @@ class EventDispatcherInterfaceMock implements MockDtoInterface
         return function (MockInterface $mock, MockContainer $mockContainer): void {
             $mock->shouldReceive('dispatch')
                 ->byDefault()
-                ->andReturnSelf();
+                ->andReturnUsing(function () {
+                    return func_get_arg(0);
+                });
         };
     }
 }

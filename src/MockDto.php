@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace PrecisionSoft\Symfony\Phpunit;
 
 use Closure;
+use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 
 class MockDto
 {
@@ -24,6 +25,7 @@ class MockDto
         return $this->class;
     }
 
+    /** @return MockDtoInterface[]|string[] */
     public function getConstruct(): ?array
     {
         return $this->construct;

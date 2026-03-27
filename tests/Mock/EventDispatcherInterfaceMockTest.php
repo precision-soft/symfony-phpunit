@@ -11,6 +11,7 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\Mock;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Mock\EventDispatcherInterfaceMock;
+use stdClass;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -70,12 +71,13 @@ final class EventDispatcherInterfaceMockTest extends TestCase
         static::assertInstanceOf(EventDispatcherInterface::class, $mock);
     }
 
-    public function testDispatchReturnsSelf(): void
+    public function testDispatchReturnsEvent(): void
     {
         $mock = $this->mockContainer->getMock(EventDispatcherInterface::class);
 
-        $result = $mock->dispatch(new \stdClass());
+        $event = new stdClass();
+        $result = $mock->dispatch($event);
 
-        static::assertSame($mock, $result);
+        static::assertSame($event, $result);
     }
 }

@@ -50,6 +50,7 @@ code_sniffer() {
 
     if [[ $? != 0 ]]; then
         print_error "fix the errors before commit"
+        stop 1
     fi
 
     print_command "end code sniffer"
@@ -63,9 +64,24 @@ php_unit() {
 
     if [[ $? != 0 ]]; then
         print_error "fix the errors before commit"
+        stop 1
     fi
 
     print_command "end php unit"
+}
+
+phpstan() {
+    print_command "start phpstan"
+    println ""
+
+    run_in_container_dev ./vendor/bin/phpstan analyse --no-progress
+
+    if [[ $? != 0 ]]; then
+        print_error "fix the errors before commit"
+        stop 1
+    fi
+
+    print_command "end phpstan"
 }
 
 php_cs_fixer() {
@@ -125,6 +141,10 @@ if [[ "${STAGED_FILES_PHP}" != "" ]]; then
     println ""
 
     php_unit "${STAGED_FILES}"
+
+    println ""
+
+    phpstan
 fi
 
 println ""
