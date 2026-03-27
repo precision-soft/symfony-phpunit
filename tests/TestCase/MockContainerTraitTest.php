@@ -10,7 +10,7 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\TestCase;
 
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
-use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockContainerNotInitializedException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
 use PrecisionSoft\Symfony\Phpunit\TestCase\Trait\MockContainerTrait;
@@ -28,7 +28,7 @@ final class MockContainerTraitTest extends TestCase
             }
         };
 
-        $this->expectException(Exception::class);
+        $this->expectException(MockContainerNotInitializedException::class);
         $this->expectExceptionMessage('mock container is not initialized');
 
         $testCase->get(SecondMockDto::class);
@@ -45,10 +45,10 @@ final class MockContainerTraitTest extends TestCase
 
         $testCase->registerMockDto(new MockDto(SecondMockDto::class));
 
-        $mock = $testCase->get(SecondMockDto::class);
+        $mockInterface = $testCase->get(SecondMockDto::class);
 
-        static::assertInstanceOf(MockInterface::class, $mock);
-        static::assertInstanceOf(SecondMockDto::class, $mock);
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
+        static::assertInstanceOf(SecondMockDto::class, $mockInterface);
     }
 
     public function testTearDownClosesMockContainerGracefullyWhenNull(): void
@@ -82,8 +82,8 @@ final class MockContainerTraitTest extends TestCase
 
         static::assertSame($testCase, $result);
 
-        $mock = $testCase->get(SecondMockDto::class);
-        static::assertInstanceOf(MockInterface::class, $mock);
+        $mockInterface = $testCase->get(SecondMockDto::class);
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
     }
 
     public function testRegisterMockDtoChaining(): void

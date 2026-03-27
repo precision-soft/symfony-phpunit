@@ -17,7 +17,10 @@ use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
 use PrecisionSoft\Symfony\Phpunit\Mock\SluggerInterfaceMock;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\FirstMockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\MixedConstructorDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ScalarConstructorDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ThirdMockDtoInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -26,10 +29,24 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class MockContainerTest extends TestCase
 {
+    private MockContainer $mockContainer;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
+    }
+
     public function test(): void
     {
-        $mockContainer = new MockContainer();
-
         $mockDto = new MockDto(
             FirstMockDto::class,
             [
@@ -41,15 +58,138 @@ final class MockContainerTest extends TestCase
             true,
         );
 
-        $mockContainer->registerMockDto($mockDto);
+        $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var FirstMockDto $mock */
-        $mock = $mockContainer->getMock(FirstMockDto::class);
+        /** @var FirstMockDto $firstMockDto */
+        $firstMockDto = $this->mockContainer->getMock(FirstMockDto::class);
 
-        static::assertInstanceOf(MockInterface::class, $mock);
-        static::assertInstanceOf(FirstMockDto::class, $mock);
-        static::assertInstanceOf(EventDispatcherInterface::class, $mock->getEventDispatcher());
-        static::assertInstanceOf(ManagerRegistry::class, $mock->getManagerRegistry());
-        static::assertInstanceOf(SluggerInterface::class, $mock->getSlugger());
+        static::assertInstanceOf(MockInterface::class, $firstMockDto);
+        static::assertInstanceOf(FirstMockDto::class, $firstMockDto);
+        static::assertInstanceOf(EventDispatcherInterface::class, $firstMockDto->getEventDispatcher());
+        static::assertInstanceOf(ManagerRegistry::class, $firstMockDto->getManagerRegistry());
+        static::assertInstanceOf(SluggerInterface::class, $firstMockDto->getSlugger());
+    }
+
+    public function testConstructDependencyAsMockDtoInstance(): void
+    {
+        $mockDto = new MockDto(
+            FirstMockDto::class,
+            [
+                new MockDto(SecondMockDto::class),
+                new MockDto(EventDispatcherInterface::class),
+                new MockDto(ManagerRegistry::class),
+                new MockDto(SluggerInterface::class),
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var FirstMockDto $firstMockDto */
+        $firstMockDto = $this->mockContainer->getMock(FirstMockDto::class);
+
+        static::assertInstanceOf(SecondMockDto::class, $firstMockDto->getSecondMockDto());
+        static::assertInstanceOf(EventDispatcherInterface::class, $firstMockDto->getEventDispatcher());
+        static::assertInstanceOf(ManagerRegistry::class, $firstMockDto->getManagerRegistry());
+        static::assertInstanceOf(SluggerInterface::class, $firstMockDto->getSlugger());
+    }
+
+    public function testConstructDependencyAsClassStringMockDtoInterface(): void
+    {
+        $mockDto = new MockDto(
+            FirstMockDto::class,
+            [
+                new MockDto(SecondMockDto::class),
+                EventDispatcherInterfaceMock::class,
+                ManagerRegistryMock::class,
+                SluggerInterfaceMock::class,
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var FirstMockDto $firstMockDto */
+        $firstMockDto = $this->mockContainer->getMock(FirstMockDto::class);
+
+        static::assertInstanceOf(MockInterface::class, $this->mockContainer->getMock(EventDispatcherInterface::class));
+        static::assertInstanceOf(MockInterface::class, $this->mockContainer->getMock(ManagerRegistry::class));
+        static::assertInstanceOf(MockInterface::class, $this->mockContainer->getMock(SluggerInterface::class));
+        static::assertInstanceOf(EventDispatcherInterface::class, $firstMockDto->getEventDispatcher());
+        static::assertInstanceOf(ManagerRegistry::class, $firstMockDto->getManagerRegistry());
+        static::assertInstanceOf(SluggerInterface::class, $firstMockDto->getSlugger());
+    }
+
+    public function testConstructDependencyAsScalarValues(): void
+    {
+        $mockDto = new MockDto(
+            ScalarConstructorDto::class,
+            [
+                'test-name',
+                42,
+                true,
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var ScalarConstructorDto $scalarConstructorDto */
+        $scalarConstructorDto = $this->mockContainer->getMock(ScalarConstructorDto::class);
+
+        static::assertSame('test-name', $scalarConstructorDto->getName());
+        static::assertSame(42, $scalarConstructorDto->getCount());
+        static::assertTrue($scalarConstructorDto->getActive());
+    }
+
+    public function testConstructDependencyAsMockDtoInterfaceInstance(): void
+    {
+        $thirdMockDtoInterface = new ThirdMockDtoInterface();
+
+        $mockDto = new MockDto(
+            MixedConstructorDto::class,
+            [
+                $thirdMockDtoInterface,
+                EventDispatcherInterfaceMock::class,
+                'instance-name',
+                7,
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var MixedConstructorDto $mixedConstructorDto */
+        $mixedConstructorDto = $this->mockContainer->getMock(MixedConstructorDto::class);
+
+        static::assertInstanceOf(MockInterface::class, $mixedConstructorDto->getSecondMockDto());
+        static::assertInstanceOf(SecondMockDto::class, $mixedConstructorDto->getSecondMockDto());
+        static::assertInstanceOf(EventDispatcherInterface::class, $mixedConstructorDto->getEventDispatcher());
+        static::assertSame('instance-name', $mixedConstructorDto->getName());
+        static::assertSame(7, $mixedConstructorDto->getCount());
+    }
+
+    public function testConstructDependencyMixedTypes(): void
+    {
+        $mockDto = new MockDto(
+            MixedConstructorDto::class,
+            [
+                new MockDto(SecondMockDto::class),
+                EventDispatcherInterfaceMock::class,
+                'static-name',
+                99,
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var MixedConstructorDto $mixedConstructorDto */
+        $mixedConstructorDto = $this->mockContainer->getMock(MixedConstructorDto::class);
+
+        static::assertInstanceOf(SecondMockDto::class, $mixedConstructorDto->getSecondMockDto());
+        static::assertInstanceOf(EventDispatcherInterface::class, $mixedConstructorDto->getEventDispatcher());
+        static::assertSame('static-name', $mixedConstructorDto->getName());
+        static::assertSame(99, $mixedConstructorDto->getCount());
     }
 }

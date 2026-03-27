@@ -66,17 +66,17 @@ final class EventDispatcherInterfaceMockTest extends TestCase
 
     public function testMockImplementsEventDispatcherInterface(): void
     {
-        $mock = $this->mockContainer->getMock(EventDispatcherInterface::class);
+        $mockInterface = $this->mockContainer->getMock(EventDispatcherInterface::class);
 
-        static::assertInstanceOf(EventDispatcherInterface::class, $mock);
+        static::assertInstanceOf(EventDispatcherInterface::class, $mockInterface);
     }
 
     public function testDispatchReturnsEvent(): void
     {
-        $mock = $this->mockContainer->getMock(EventDispatcherInterface::class);
+        $mockInterface = $this->mockContainer->getMock(EventDispatcherInterface::class);
 
         $event = new stdClass();
-        $result = $mock->dispatch($event);
+        $result = $mockInterface->dispatch($event);
 
         static::assertSame($event, $result);
     }

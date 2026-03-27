@@ -30,11 +30,11 @@ class SluggerInterfaceMock implements MockDtoInterface
 
     public static function getOnCreate(): Closure
     {
-        return function (MockInterface $mock, MockContainer $mockContainer): void {
-            $mock->shouldReceive('slug')
+        return function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+            $mockInterface->shouldReceive('slug')
                 ->byDefault()
-                ->andReturnUsing(function (): UnicodeString {
-                    return new UnicodeString(\uniqid());
+                ->andReturnUsing(function (string $string): UnicodeString {
+                    return new UnicodeString($string);
                 });
         };
     }

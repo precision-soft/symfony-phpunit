@@ -124,7 +124,14 @@ final class CreateServiceTest extends AbstractTestCase
 
 ### Nested Dependencies
 
-Constructor dependencies are resolved recursively. You can nest `MockDto` instances, reference `MockDtoInterface` class names, or pass scalar values:
+Constructor dependencies are resolved recursively. Each element in `construct` can be:
+
+| Type | Example | Resolution |
+|------|---------|------------|
+| `MockDto` instance | `new MockDto(FooRepository::class)` | Resolved into a mock |
+| `MockDtoInterface` instance | `new FooRepositoryMock()` | Resolved via `getMockDto()` |
+| `class-string<MockDtoInterface>` | `ManagerRegistryMock::class` | Resolved via `getMockDto()` |
+| Scalar (`string`, `int`, `float`, `bool`) | `'api-key-123'`, `42` | Passed as-is |
 
 ```php
 public static function getMockDto(): MockDto
@@ -191,7 +198,7 @@ The library provides pre-configured mocks for common Symfony and Doctrine interf
 
 - **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`.
 - **`EventDispatcherInterfaceMock`** -- Mocks `EventDispatcherInterface` with a `dispatch()` that returns the dispatched event.
-- **`SluggerInterfaceMock`** -- Mocks `SluggerInterface` with a `slug()` that returns a unique `UnicodeString` per call.
+- **`SluggerInterfaceMock`** -- Mocks `SluggerInterface` with a `slug()` that returns a `UnicodeString` containing the input string.
 
 ## Dev
 

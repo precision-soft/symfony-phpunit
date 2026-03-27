@@ -10,7 +10,7 @@ namespace PrecisionSoft\Symfony\Phpunit\TestCase\Trait;
 
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
-use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockContainerNotInitializedException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 
 trait MockContainerTrait
@@ -20,7 +20,7 @@ trait MockContainerTrait
     protected function get(string $class): MockInterface
     {
         if (null === $this->mockContainer) {
-            throw new Exception(
+            throw new MockContainerNotInitializedException(
                 'mock container is not initialized',
             );
         }

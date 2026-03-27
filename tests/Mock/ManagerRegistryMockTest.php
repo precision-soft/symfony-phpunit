@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
-use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
+use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
 use stdClass;
 
@@ -52,9 +52,9 @@ final class ManagerRegistryMockTest extends TestCase
 
     public function testMockImplementsManagerRegistry(): void
     {
-        $mock = $this->mockContainer->getMock(ManagerRegistry::class);
+        $mockInterface = $this->mockContainer->getMock(ManagerRegistry::class);
 
-        static::assertInstanceOf(ManagerRegistry::class, $mock);
+        static::assertInstanceOf(ManagerRegistry::class, $mockInterface);
     }
 
     public function testGetManagerReturnsEntityManagerInterface(): void
@@ -242,7 +242,7 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
         $entityManager = $registry->getManager();
 
-        $this->expectException(Exception::class);
+        $this->expectException(ClassNotFoundException::class);
         $this->expectExceptionMessage('does not exist');
 
         $entityManager->getReference('NonExistentClass', 1);

@@ -16,7 +16,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
-use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
+use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use ReflectionClass;
 
@@ -34,62 +34,62 @@ class ManagerRegistryMock implements MockDtoInterface
 
     public static function getOnCreate(): Closure
     {
-        return function (MockInterface $mock, MockContainer $mockContainer): void {
-            $mock->shouldReceive('getManager')
+        return function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+            $mockInterface->shouldReceive('getManager')
                 ->byDefault()
-                ->andReturn(static::getEntityManagerMock($mockContainer));
+                ->andReturn(self::getEntityManagerMock($mockContainer));
         };
     }
 
-    public static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
+    private static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
     {
         $mockContainer->registerMockDto(
             new MockDto(
                 EntityManagerInterface::class,
                 [],
                 false,
-                function (MockInterface $mock, MockContainer $mockContainer): void {
-                    $mock->shouldReceive('beginTransaction')
+                function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                    $mockInterface->shouldReceive('beginTransaction')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('persist')
+                    $mockInterface->shouldReceive('persist')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('remove')
+                    $mockInterface->shouldReceive('remove')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('flush')
+                    $mockInterface->shouldReceive('flush')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('commit')
+                    $mockInterface->shouldReceive('commit')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('rollback')
+                    $mockInterface->shouldReceive('rollback')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('clear')
+                    $mockInterface->shouldReceive('clear')
                         ->byDefault()
-                        ->andReturnSelf();
+                        ->andReturnNull();
 
-                    $mock->shouldReceive('getReference')
+                    $mockInterface->shouldReceive('getReference')
                         ->byDefault()
                         ->andReturnUsing(
                             function (string $entityName, mixed $id): object {
                                 if (false === class_exists($entityName)) {
-                                    throw new Exception(\sprintf('class `%s` does not exist', $entityName));
+                                    throw new ClassNotFoundException(\sprintf('class `%s` does not exist', $entityName));
                                 }
 
-                                $reflection = new ReflectionClass($entityName);
-                                $constructor = $reflection->getConstructor();
+                                $reflectionClass = new ReflectionClass($entityName);
+                                $reflectionMethod = $reflectionClass->getConstructor();
 
-                                if (null !== $constructor && 0 < $constructor->getNumberOfRequiredParameters()) {
-                                    $entity = $reflection->newInstanceWithoutConstructor();
+                                if (null !== $reflectionMethod && 0 < $reflectionMethod->getNumberOfRequiredParameters()) {
+                                    $entity = $reflectionClass->newInstanceWithoutConstructor();
                                 } else {
                                     $entity = new $entityName();
                                 }
@@ -102,13 +102,13 @@ class ManagerRegistryMock implements MockDtoInterface
                             },
                         );
 
-                    $mock->shouldReceive('getClassMetadata')
+                    $mockInterface->shouldReceive('getClassMetadata')
                         ->byDefault()
-                        ->andReturn(static::getClassMetadataMock($mockContainer));
+                        ->andReturn(self::getClassMetadataMock($mockContainer));
 
-                    $mock->shouldReceive('getConnection')
+                    $mockInterface->shouldReceive('getConnection')
                         ->byDefault()
-                        ->andReturn(static::getConnectionMock($mockContainer));
+                        ->andReturn(self::getConnectionMock($mockContainer));
                 },
             ),
         );
@@ -116,19 +116,19 @@ class ManagerRegistryMock implements MockDtoInterface
         return $mockContainer->getMock(EntityManagerInterface::class);
     }
 
-    public static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
+    private static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
     {
         $mockContainer->registerMockDto(
             new MockDto(
                 ClassMetadata::class,
                 null,
                 false,
-                function (MockInterface $mock, MockContainer $mockContainer): void {
-                    $mock->shouldReceive('setIdGeneratorType')
+                function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                    $mockInterface->shouldReceive('setIdGeneratorType')
                         ->byDefault()
                         ->andReturnSelf();
 
-                    $mock->shouldReceive('setIdGenerator')
+                    $mockInterface->shouldReceive('setIdGenerator')
                         ->byDefault()
                         ->andReturnSelf();
                 },
@@ -138,15 +138,15 @@ class ManagerRegistryMock implements MockDtoInterface
         return $mockContainer->getMock(ClassMetadata::class);
     }
 
-    public static function getConnectionMock(MockContainer $mockContainer): MockInterface
+    private static function getConnectionMock(MockContainer $mockContainer): MockInterface
     {
         $mockContainer->registerMockDto(
             new MockDto(
                 Connection::class,
                 null,
                 true,
-                function (MockInterface $mock, MockContainer $mockContainer): void {
-                    $mock->shouldReceive('executeStatement')
+                function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                    $mockInterface->shouldReceive('executeStatement')
                         ->byDefault()
                         ->andReturn(1);
                 },

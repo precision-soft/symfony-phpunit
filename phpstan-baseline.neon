@@ -15,7 +15,3 @@ parameters:
 			count: 1
 			path: src/Mock/SluggerInterfaceMock.php
 
-		-
-			message: "#^Method PrecisionSoft\\\\Symfony\\\\Phpunit\\\\MockDto\\:\\:__construct\\(\\) has parameter \\$construct with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/MockDto.php

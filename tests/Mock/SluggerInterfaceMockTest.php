@@ -66,26 +66,26 @@ final class SluggerInterfaceMockTest extends TestCase
 
     public function testMockImplementsSluggerInterface(): void
     {
-        $mock = $this->mockContainer->getMock(SluggerInterface::class);
+        $mockInterface = $this->mockContainer->getMock(SluggerInterface::class);
 
-        static::assertInstanceOf(SluggerInterface::class, $mock);
+        static::assertInstanceOf(SluggerInterface::class, $mockInterface);
     }
 
     public function testSlugReturnsUnicodeString(): void
     {
-        $mock = $this->mockContainer->getMock(SluggerInterface::class);
+        $mockInterface = $this->mockContainer->getMock(SluggerInterface::class);
 
-        $result = $mock->slug('some text');
+        $result = $mockInterface->slug('some text');
 
         static::assertInstanceOf(UnicodeString::class, $result);
     }
 
-    public function testSlugResultIsNonEmpty(): void
+    public function testSlugReturnsDeterministicResult(): void
     {
-        $mock = $this->mockContainer->getMock(SluggerInterface::class);
+        $mockInterface = $this->mockContainer->getMock(SluggerInterface::class);
 
-        $result = $mock->slug('any text');
+        $result = $mockInterface->slug('any text');
 
-        static::assertGreaterThan(0, \strlen((string)$result));
+        static::assertSame('any text', (string)$result);
     }
 }

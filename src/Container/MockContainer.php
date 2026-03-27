@@ -11,7 +11,8 @@ namespace PrecisionSoft\Symfony\Phpunit\Container;
 use Mockery;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
-use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 
 class MockContainer
@@ -24,7 +25,7 @@ class MockContainer
     public function registerMockDto(MockDto $mockDto): self
     {
         if (true === isset($this->mockDtos[$mockDto->getClass()])) {
-            throw new Exception(
+            throw new MockAlreadyRegisteredException(
                 \sprintf('mock dto already registered for class `%s`', $mockDto->getClass()),
             );
         }
@@ -38,7 +39,7 @@ class MockContainer
     {
         if (false === isset($this->mocks[$class])) {
             if (false === isset($this->mockDtos[$class])) {
-                throw new Exception(\sprintf('no mock dto found for class `%s`', $class));
+                throw new MockNotFoundException(\sprintf('no mock dto found for class `%s`', $class));
             }
 
             $this->createMock($this->mockDtos[$class]);
@@ -47,15 +48,15 @@ class MockContainer
         return $this->mocks[$class];
     }
 
-    public function registerMock(string $class, MockInterface $mock): self
+    public function registerMock(string $class, MockInterface $mockInterface): self
     {
         if (true === isset($this->mocks[$class])) {
-            throw new Exception(
+            throw new MockAlreadyRegisteredException(
                 \sprintf('mock already registered for class `%s`', $class),
             );
         }
 
-        $this->mocks[$class] = $mock;
+        $this->mocks[$class] = $mockInterface;
 
         return $this;
     }
@@ -79,40 +80,47 @@ class MockContainer
 
     private function createMock(MockDto $mockDto): MockInterface
     {
-        $mockedConstruct = [];
+        $mockedConstructorArguments = [];
 
         foreach ($mockDto->getConstruct() ?? [] as $dependency) {
-            switch (true) {
-                case $dependency instanceof MockDto:
-                    $mockedDependency = $this->getOrCreateMock($dependency);
-                    break;
-                case $dependency instanceof MockDtoInterface || \is_a($dependency, MockDtoInterface::class, true):
-                    $mockedDependency = $this->getOrCreateMock($dependency::getMockDto());
-                    break;
-                default:
-                    $mockedDependency = $dependency;
-                    break;
+            if ($dependency instanceof MockDto) {
+                $mockedConstructorArguments[] = $this->getOrCreateMock($dependency);
+
+                continue;
             }
 
-            $mockedConstruct[] = $mockedDependency;
+            if ($dependency instanceof MockDtoInterface) {
+                $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
+
+                continue;
+            }
+
+            if (true === \is_string($dependency) && true === \is_a($dependency, MockDtoInterface::class, true)) {
+                /** @var class-string<MockDtoInterface> $dependency */
+                $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
+
+                continue;
+            }
+
+            $mockedConstructorArguments[] = $dependency;
         }
 
         if (null === $mockDto->getConstruct()) {
-            $mock = Mockery::mock($mockDto->getClass());
+            $mockInterface = Mockery::mock($mockDto->getClass());
         } else {
-            $mock = Mockery::mock($mockDto->getClass(), $mockedConstruct);
+            $mockInterface = Mockery::mock($mockDto->getClass(), $mockedConstructorArguments);
         }
 
-        $this->registerMock($mockDto->getClass(), $mock);
+        $this->registerMock($mockDto->getClass(), $mockInterface);
 
         if (true === $mockDto->getPartial()) {
-            $mock->makePartial();
+            $mockInterface->makePartial();
         }
 
         if (null !== $mockDto->getOnCreate()) {
-            $mockDto->getOnCreate()($mock, $this);
+            $mockDto->getOnCreate()($mockInterface, $this);
         }
 
-        return $mock;
+        return $mockInterface;
     }
 }

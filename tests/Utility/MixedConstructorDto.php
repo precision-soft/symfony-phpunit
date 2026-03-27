@@ -8,17 +8,15 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Test\Utility;
 
-use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-class FirstMockDto
+class MixedConstructorDto
 {
     public function __construct(
         private readonly SecondMockDto $secondMockDto,
         private readonly EventDispatcherInterface $eventDispatcherInterface,
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly SluggerInterface $sluggerInterface,
+        private readonly string $name,
+        private readonly int $count,
     ) {}
 
     public function getSecondMockDto(): SecondMockDto
@@ -31,13 +29,13 @@ class FirstMockDto
         return $this->eventDispatcherInterface;
     }
 
-    public function getManagerRegistry(): ManagerRegistry
+    public function getName(): string
     {
-        return $this->managerRegistry;
+        return $this->name;
     }
 
-    public function getSlugger(): SluggerInterface
+    public function getCount(): int
     {
-        return $this->sluggerInterface;
+        return $this->count;
     }
 }

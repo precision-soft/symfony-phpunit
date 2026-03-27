@@ -12,7 +12,8 @@ use Mockery;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
-use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
 
@@ -42,7 +43,7 @@ final class MockContainerEdgeCaseTest extends TestCase
         $mockDto = new MockDto(SecondMockDto::class);
         $this->mockContainer->registerMockDto($mockDto);
 
-        $this->expectException(Exception::class);
+        $this->expectException(MockAlreadyRegisteredException::class);
         $this->expectExceptionMessage(\sprintf('mock dto already registered for class `%s`', SecondMockDto::class));
 
         $this->mockContainer->registerMockDto($mockDto);
@@ -50,7 +51,7 @@ final class MockContainerEdgeCaseTest extends TestCase
 
     public function testGetMockThrowsExceptionWhenNotRegistered(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(MockNotFoundException::class);
         $this->expectExceptionMessage(\sprintf('no mock dto found for class `%s`', SecondMockDto::class));
 
         $this->mockContainer->getMock(SecondMockDto::class);
@@ -59,32 +60,32 @@ final class MockContainerEdgeCaseTest extends TestCase
     public function testRegisterMockThrowsExceptionOnDuplicate(): void
     {
         $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class));
-        $mock = $this->mockContainer->getMock(SecondMockDto::class);
+        $mockInterface = $this->mockContainer->getMock(SecondMockDto::class);
 
-        $this->expectException(Exception::class);
+        $this->expectException(MockAlreadyRegisteredException::class);
         $this->expectExceptionMessage(\sprintf('mock already registered for class `%s`', SecondMockDto::class));
 
-        $this->mockContainer->registerMock(SecondMockDto::class, $mock);
+        $this->mockContainer->registerMock(SecondMockDto::class, $mockInterface);
     }
 
     public function testRegisterMockDirectlyAndRetrieve(): void
     {
-        $externalMock = Mockery::mock(SecondMockDto::class);
-        $this->mockContainer->registerMock(SecondMockDto::class, $externalMock);
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
+        $this->mockContainer->registerMock(SecondMockDto::class, $externalMockInterface);
 
         $retrieved = $this->mockContainer->getMock(SecondMockDto::class);
 
-        static::assertSame($externalMock, $retrieved);
+        static::assertSame($externalMockInterface, $retrieved);
     }
 
     public function testGetMockReturnsSameInstanceOnSubsequentCalls(): void
     {
         $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class));
 
-        $firstCall = $this->mockContainer->getMock(SecondMockDto::class);
-        $secondCall = $this->mockContainer->getMock(SecondMockDto::class);
+        $firstMockInterface = $this->mockContainer->getMock(SecondMockDto::class);
+        $secondMockInterface = $this->mockContainer->getMock(SecondMockDto::class);
 
-        static::assertSame($firstCall, $secondCall);
+        static::assertSame($firstMockInterface, $secondMockInterface);
     }
 
     public function testOnCreateCallbackIsInvoked(): void
@@ -94,7 +95,7 @@ final class MockContainerEdgeCaseTest extends TestCase
             SecondMockDto::class,
             null,
             false,
-            function (MockInterface $mock, MockContainer $container) use (&$callbackInvoked): void {
+            function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$callbackInvoked): void {
                 $callbackInvoked = true;
             },
         );
@@ -107,34 +108,34 @@ final class MockContainerEdgeCaseTest extends TestCase
 
     public function testOnCreateCallbackReceivesMockAndContainer(): void
     {
-        $receivedMock = null;
-        $receivedContainer = null;
+        $receivedMockInterface = null;
+        $receivedMockContainer = null;
 
         $mockDto = new MockDto(
             SecondMockDto::class,
             null,
             false,
-            function (MockInterface $mock, MockContainer $container) use (&$receivedMock, &$receivedContainer): void {
-                $receivedMock = $mock;
-                $receivedContainer = $container;
+            function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$receivedMockInterface, &$receivedMockContainer): void {
+                $receivedMockInterface = $mockInterface;
+                $receivedMockContainer = $mockContainer;
             },
         );
 
         $this->mockContainer->registerMockDto($mockDto);
-        $createdMock = $this->mockContainer->getMock(SecondMockDto::class);
+        $createdMockInterface = $this->mockContainer->getMock(SecondMockDto::class);
 
-        static::assertSame($createdMock, $receivedMock);
-        static::assertSame($this->mockContainer, $receivedContainer);
+        static::assertSame($createdMockInterface, $receivedMockInterface);
+        static::assertSame($this->mockContainer, $receivedMockContainer);
     }
 
     public function testPartialMockIsCreated(): void
     {
         $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class, null, true));
 
-        $mock = $this->mockContainer->getMock(SecondMockDto::class);
+        $mockInterface = $this->mockContainer->getMock(SecondMockDto::class);
 
-        static::assertInstanceOf(MockInterface::class, $mock);
-        static::assertInstanceOf(SecondMockDto::class, $mock);
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
+        static::assertInstanceOf(SecondMockDto::class, $mockInterface);
     }
 
     public function testRegisterMockDtoReturnsSelf(): void
@@ -148,9 +149,9 @@ final class MockContainerEdgeCaseTest extends TestCase
 
     public function testRegisterMockReturnsSelf(): void
     {
-        $externalMock = Mockery::mock(SecondMockDto::class);
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
 
-        $result = $this->mockContainer->registerMock(SecondMockDto::class, $externalMock);
+        $result = $this->mockContainer->registerMock(SecondMockDto::class, $externalMockInterface);
 
         static::assertSame($this->mockContainer, $result);
     }

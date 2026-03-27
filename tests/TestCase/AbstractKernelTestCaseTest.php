@@ -34,20 +34,20 @@ final class AbstractKernelTestCaseTest extends AbstractKernelTestCase
 
     public function testGetReturnsRegisteredMock(): void
     {
-        $mock = $this->get(SecondMockDto::class);
+        $mockInterface = $this->get(SecondMockDto::class);
 
-        static::assertInstanceOf(MockInterface::class, $mock);
-        static::assertInstanceOf(SecondMockDto::class, $mock);
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
+        static::assertInstanceOf(SecondMockDto::class, $mockInterface);
     }
 
     public function testRegisterMockDtoAddsAdditionalMock(): void
     {
         $this->registerMockDto(EventDispatcherInterfaceMock::getMockDto());
 
-        $mock = $this->get(EventDispatcherInterface::class);
+        $mockInterface = $this->get(EventDispatcherInterface::class);
 
-        static::assertInstanceOf(MockInterface::class, $mock);
-        static::assertInstanceOf(EventDispatcherInterface::class, $mock);
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
+        static::assertInstanceOf(EventDispatcherInterface::class, $mockInterface);
     }
 
     public function testRegisterMockDtoReturnsSelf(): void
@@ -59,17 +59,17 @@ final class AbstractKernelTestCaseTest extends AbstractKernelTestCase
 
     public function testSetUpInitializesMockContainer(): void
     {
-        $mock = $this->get(SecondMockDto::class);
+        $mockInterface = $this->get(SecondMockDto::class);
 
-        static::assertInstanceOf(MockInterface::class, $mock);
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
     }
 
     public function testGetReturnsSameMockInstance(): void
     {
-        $firstCall = $this->get(SecondMockDto::class);
-        $secondCall = $this->get(SecondMockDto::class);
+        $firstMockInterface = $this->get(SecondMockDto::class);
+        $secondMockInterface = $this->get(SecondMockDto::class);
 
-        static::assertSame($firstCall, $secondCall);
+        static::assertSame($firstMockInterface, $secondMockInterface);
     }
 
     public function testImplementsMockDtoInterface(): void
