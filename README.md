@@ -1,4 +1,4 @@
-# symfony-phpunit
+# Symfony Phpunit
 
 A Mockery-based testing library for Symfony applications that simplifies mock creation, dependency injection, and test setup through a declarative `MockDto` configuration pattern.
 
