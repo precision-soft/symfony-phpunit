@@ -45,7 +45,7 @@ final class MockContainerTest extends TestCase
         parent::tearDown();
     }
 
-    public function test(): void
+    public function testPartialMockWithConstructDependenciesResolvesCorrectly(): void
     {
         $mockDto = new MockDto(
             FirstMockDto::class,

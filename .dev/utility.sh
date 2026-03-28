@@ -15,10 +15,6 @@ fi
 DOCKER_PATH=".dev/docker/"
 CONTAINER_DEV="dev"
 
-error() {
-    println "${COLOR_RED}( $1 )${COLOR_RESET}"
-}
-
 warning() {
     println "${COLOR_YELLOW}( $1 )${COLOR_RESET}"
 }

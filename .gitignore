@@ -4,6 +4,7 @@
 /.php-cs-fixer.cache
 /.phpcs-cache
 /.phpunit.result.cache
+/phpunit.xml
 /*.zip
 /*.tar.gz
 /.claude/

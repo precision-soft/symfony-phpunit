@@ -4,7 +4,7 @@
 
 stop() {
     if [[ "$2" != "" ]]; then
-        error "$2"
+        print_error "$2"
 
         println ""
     fi
@@ -40,20 +40,6 @@ lint() {
 
     println ""
     print_command "end php lint"
-}
-
-code_sniffer() {
-    print_command "start code sniffer"
-    println ""
-
-    run_in_container_dev ./vendor/bin/phpcs --no-cache --encoding=utf-8 -n -p -v -s $1
-
-    if [[ $? != 0 ]]; then
-        print_error "fix the errors before commit"
-        stop 1
-    fi
-
-    print_command "end code sniffer"
 }
 
 php_unit() {

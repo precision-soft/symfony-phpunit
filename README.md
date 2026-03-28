@@ -33,19 +33,19 @@ new MockDto(
         'staticDependency',
     ],
     partial: true,
-    onCreate: function (MockInterface $mock, MockContainer $mockContainer): void {
+    onCreate: static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
     },
 );
 ```
 
 **Parameters:**
 
-| Parameter   | Type       | Default | Description                                             |
-|-------------|------------|---------|---------------------------------------------------------|
-| `class`     | `string`   | -       | FQCN of the class or interface to mock                  |
-| `construct` | `?array`   | `null`  | Constructor arguments; `null` means no constructor args |
-| `partial`   | `bool`     | `false` | If `true`, creates a partial mock via `makePartial()`   |
-| `onCreate`  | `?Closure` | `null`  | Callback invoked after mock creation for setup          |
+| Parameter   | Type       | Default | Description                                                                             |
+|-------------|------------|---------|-----------------------------------------------------------------------------------------|
+| `class`     | `string`   | -       | FQCN of the class or interface to mock                                                  |
+| `construct` | `?array`   | `null`  | Constructor arguments; `null` bypasses constructor, `[]` calls constructor with no args |
+| `partial`   | `bool`     | `false` | If `true`, creates a partial mock via `makePartial()`                                   |
+| `onCreate`  | `?Closure` | `null`  | Callback invoked after mock creation for setup                                          |
 
 ### MockDtoInterface
 
@@ -164,10 +164,10 @@ public static function getMockDto(): MockDto
         CacheInterface::class,
         null,
         false,
-        function (MockInterface $mock, MockContainer $mockContainer): void {
-            $mock->shouldReceive('get')
+        static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+            $mockInterface->shouldReceive('get')
                 ->byDefault()
-                ->andReturnUsing(function (string $key, callable $callback) {
+                ->andReturnUsing(static function (string $key, callable $callback) {
                     return $callback();
                 });
         },
@@ -206,6 +206,53 @@ Each built-in mock requires additional packages — install them as needed:
 - **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`.
 - **`EventDispatcherInterfaceMock`** -- Mocks `EventDispatcherInterface` with a `dispatch()` that returns the dispatched event.
 - **`SluggerInterfaceMock`** -- Mocks `SluggerInterface` with a `slug()` that returns a `UnicodeString` containing the input string.
+
+### Registering Additional Mocks at Runtime
+
+Use `registerMockDto()` to register additional mock configurations during a test:
+
+```php
+public function testFoo(): void
+{
+    $this->registerMockDto(new MockDto(
+        BarService::class,
+        null,
+        false,
+        static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+            $mockInterface->shouldReceive('process')
+                ->once()
+                ->andReturn(true);
+        },
+    ));
+
+    $barService = $this->get(BarService::class);
+}
+```
+
+Use `registerMock()` to register a pre-built `MockInterface` directly:
+
+```php
+public function testFoo(): void
+{
+    $mockInterface = Mockery::mock(BarService::class);
+    $mockInterface->shouldReceive('process')->once()->andReturn(true);
+
+    $this->mockContainer->registerMock(BarService::class, $mockInterface);
+
+    $barService = $this->mockContainer->getMock(BarService::class);
+}
+```
+
+### Exceptions
+
+All exceptions are in the `PrecisionSoft\Symfony\Phpunit\Exception` namespace:
+
+| Exception                              | Thrown when                                            |
+|----------------------------------------|--------------------------------------------------------|
+| `ClassNotFoundException`               | `getReference()` is called with a non-existent class   |
+| `MockAlreadyRegisteredException`       | A mock or `MockDto` is registered twice for same class |
+| `MockNotFoundException`                | `getMock()` is called for an unregistered class        |
+| `MockContainerNotInitializedException` | `MockContainer` is accessed before initialization      |
 
 ## Dev
 

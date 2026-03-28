@@ -95,7 +95,7 @@ final class MockContainerEdgeCaseTest extends TestCase
             SecondMockDto::class,
             null,
             false,
-            function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$callbackInvoked): void {
+            static function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$callbackInvoked): void {
                 $callbackInvoked = true;
             },
         );
@@ -115,7 +115,7 @@ final class MockContainerEdgeCaseTest extends TestCase
             SecondMockDto::class,
             null,
             false,
-            function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$receivedMockInterface, &$receivedMockContainer): void {
+            static function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$receivedMockInterface, &$receivedMockContainer): void {
                 $receivedMockInterface = $mockInterface;
                 $receivedMockContainer = $mockContainer;
             },

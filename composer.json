@@ -1,7 +1,7 @@
 {
     "name": "precision-soft/symfony-phpunit",
     "type": "library",
-    "description": "library used to make writing phpunit tests easier",
+    "description": "Mockery-based mock container and test utilities for Symfony PHPUnit",
     "keywords": [
         "symfony",
         "phpunit",
@@ -24,7 +24,7 @@
         "doctrine/doctrine-bundle": "2.*",
         "doctrine/orm": "3.*",
         "friendsofphp/php-cs-fixer": "3.*",
-        "phpstan/phpstan": "^1.0",
+        "phpstan/phpstan": "1.*",
         "symfony/framework-bundle": "7.*"
     },
     "autoload": {

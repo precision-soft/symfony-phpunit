@@ -59,6 +59,20 @@ punit() {
     return 0
 }
 
+pstan() {
+    if [[ -e "${PWD}/vendor/bin/phpstan" ]]; then
+        EXEC_PATH="${PWD}/vendor/bin/phpstan"
+    else
+        print_error 'phpstan not found'
+        return 0
+    fi
+
+    print_command "php -d memory_limit=-1 ${EXEC_PATH} analyse $@"
+    php -d memory_limit=-1 "${EXEC_PATH}" analyse "$@"
+
+    return 0
+}
+
 if [[ -f ~/.profile_local ]]; then
     . ~/.profile_local
 fi
