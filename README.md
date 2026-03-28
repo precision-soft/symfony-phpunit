@@ -126,12 +126,12 @@ final class CreateServiceTest extends AbstractTestCase
 
 Constructor dependencies are resolved recursively. Each element in `construct` can be:
 
-| Type | Example | Resolution |
-|------|---------|------------|
-| `MockDto` instance | `new MockDto(FooRepository::class)` | Resolved into a mock |
-| `MockDtoInterface` instance | `new FooRepositoryMock()` | Resolved via `getMockDto()` |
-| `class-string<MockDtoInterface>` | `ManagerRegistryMock::class` | Resolved via `getMockDto()` |
-| Scalar (`string`, `int`, `float`, `bool`) | `'api-key-123'`, `42` | Passed as-is |
+| Type                                      | Example                             | Resolution                  |
+|-------------------------------------------|-------------------------------------|-----------------------------|
+| `MockDto` instance                        | `new MockDto(FooRepository::class)` | Resolved into a mock        |
+| `MockDtoInterface` instance               | `new FooRepositoryMock()`           | Resolved via `getMockDto()` |
+| `class-string<MockDtoInterface>`          | `ManagerRegistryMock::class`        | Resolved via `getMockDto()` |
+| Scalar (`string`, `int`, `float`, `bool`) | `'api-key-123'`, `42`               | Passed as-is                |
 
 ```php
 public static function getMockDto(): MockDto
@@ -194,7 +194,14 @@ public static function getMockDto(): MockDto
 
 ### Built-in Mocks
 
-The library provides pre-configured mocks for common Symfony and Doctrine interfaces:
+The library provides pre-configured mocks for common Symfony and Doctrine interfaces.
+Each built-in mock requires additional packages — install them as needed:
+
+| Mock                           | Requires                                                    |
+|--------------------------------|-------------------------------------------------------------|
+| `ManagerRegistryMock`          | `doctrine/orm`, `doctrine/doctrine-bundle`                  |
+| `SluggerInterfaceMock`         | `symfony/string`                                            |
+| `EventDispatcherInterfaceMock` | `symfony/event-dispatcher-contracts` (included via Symfony) |
 
 - **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`.
 - **`EventDispatcherInterfaceMock`** -- Mocks `EventDispatcherInterface` with a `dispatch()` that returns the dispatched event.

@@ -25,7 +25,6 @@
         "doctrine/orm": "3.*",
         "friendsofphp/php-cs-fixer": "3.*",
         "phpstan/phpstan": "^1.0",
-        "squizlabs/php_codesniffer": "3.*",
         "symfony/framework-bundle": "7.*"
     },
     "autoload": {
@@ -48,6 +47,11 @@
         "post-update-cmd": [
             "@install-hooks"
         ]
+    },
+    "suggest": {
+        "doctrine/orm": "Required to use ManagerRegistryMock",
+        "doctrine/doctrine-bundle": "Required to use ManagerRegistryMock",
+        "symfony/string": "Required to use SluggerInterfaceMock"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,

@@ -48,7 +48,7 @@ class ManagerRegistryMock implements MockDtoInterface
                 EntityManagerInterface::class,
                 [],
                 false,
-                function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
                     $mockInterface->shouldReceive('beginTransaction')
                         ->byDefault()
                         ->andReturnNull();
@@ -80,7 +80,7 @@ class ManagerRegistryMock implements MockDtoInterface
                     $mockInterface->shouldReceive('getReference')
                         ->byDefault()
                         ->andReturnUsing(
-                            function (string $entityName, mixed $id): object {
+                            static function (string $entityName, mixed $id): object {
                                 if (false === class_exists($entityName)) {
                                     throw new ClassNotFoundException(\sprintf('class `%s` does not exist', $entityName));
                                 }
@@ -123,7 +123,7 @@ class ManagerRegistryMock implements MockDtoInterface
                 ClassMetadata::class,
                 null,
                 false,
-                function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
                     $mockInterface->shouldReceive('setIdGeneratorType')
                         ->byDefault()
                         ->andReturnSelf();
@@ -145,7 +145,7 @@ class ManagerRegistryMock implements MockDtoInterface
                 Connection::class,
                 null,
                 true,
-                function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
                     $mockInterface->shouldReceive('executeStatement')
                         ->byDefault()
                         ->andReturn(1);

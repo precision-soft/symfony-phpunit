@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\EntityWithSetId;
 use stdClass;
 
 /**
@@ -235,6 +236,29 @@ final class ManagerRegistryMockTest extends TestCase
         $entity = $entityManager->getReference(ArrayObject::class, 1);
 
         static::assertInstanceOf(ArrayObject::class, $entity);
+    }
+
+    public function testGetReferenceWithSetIdSetsId(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        /** @var EntityWithSetId $entityWithSetId */
+        $entityWithSetId = $entityManager->getReference(EntityWithSetId::class, 42);
+
+        static::assertInstanceOf(EntityWithSetId::class, $entityWithSetId);
+        static::assertSame(42, $entityWithSetId->getId());
+    }
+
+    public function testGetReferenceWithoutSetIdDoesNotSetId(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $entity = $entityManager->getReference(stdClass::class, 99);
+
+        static::assertInstanceOf(stdClass::class, $entity);
+        static::assertFalse(\method_exists($entity, 'setId'));
     }
 
     public function testGetReferenceWithNonexistentClassThrows(): void
