@@ -65,8 +65,6 @@ class MockContainer
     {
         $this->mockDtos = [];
         $this->mocks = [];
-
-        Mockery::close();
     }
 
     private function getOrCreateMock(MockDto $mockDto): MockInterface

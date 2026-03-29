@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\TestCase\Trait;
 
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockContainerNotInitializedException;
@@ -15,6 +16,8 @@ use PrecisionSoft\Symfony\Phpunit\MockDto;
 
 trait MockContainerTrait
 {
+    use MockeryPHPUnitIntegration;
+
     private ?MockContainer $mockContainer = null;
 
     protected function get(string $class): MockInterface
