@@ -33,8 +33,7 @@ lint() {
         run_in_container_dev php -l -d display_errors=0 "${FILE}"
 
         if [[ $? != 0 ]]; then
-            print_error "fix the error before commit"
-            stop 1
+            stop 1 "fix the error before commit"
         fi
     done
 
@@ -49,8 +48,7 @@ php_unit() {
     run_in_container_dev ./vendor/bin/simple-phpunit
 
     if [[ $? != 0 ]]; then
-        print_error "fix the errors before commit"
-        stop 1
+        stop 1 "fix the errors before commit"
     fi
 
     print_command "end php unit"
@@ -63,8 +61,7 @@ phpstan() {
     run_in_container_dev ./vendor/bin/phpstan analyse --no-progress
 
     if [[ $? != 0 ]]; then
-        print_error "fix the errors before commit"
-        stop 1
+        stop 1 "fix the errors before commit"
     fi
 
     print_command "end phpstan"
@@ -77,13 +74,12 @@ php_cs_fixer() {
     local files=()
     while IFS= read -r f; do
         [[ -n "$f" ]] && files+=("$f")
-    done <<< "${STAGED_FILES_PHP}"
+    done <<< "$1"
 
     run_in_container_dev ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php "${files[@]}"
 
     if [[ $? != 0 ]]; then
-        print_error "fix the errors before commit"
-        stop 1
+        stop 1 "fix the errors before commit"
     fi
 
     while IFS= read -r FILE; do
@@ -126,7 +122,7 @@ if [[ "${STAGED_FILES_PHP}" != "" ]]; then
 
     println ""
 
-    php_unit "${STAGED_FILES}"
+    php_unit
 
     println ""
 

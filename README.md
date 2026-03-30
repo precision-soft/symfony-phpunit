@@ -74,12 +74,12 @@ class FooRepositoryMock implements MockDtoInterface
 
 **Methods:**
 
-| Method                                             | Description                                 |
-|----------------------------------------------------|---------------------------------------------|
-| `registerMockDto(MockDto $mockDto): self`          | Register a mock configuration               |
-| `getMock(string $class): MockInterface`            | Get (or lazily create) a mock by class name |
-| `registerMock(string $class, MockInterface): self` | Register a pre-built mock directly          |
-| `close(): void`                                    | Clear all mocks and call `Mockery::close()` |
+| Method                                             | Description                                              |
+|----------------------------------------------------|----------------------------------------------------------|
+| `registerMockDto(MockDto $mockDto): self`          | Register a mock configuration                            |
+| `getMock(string $class): MockInterface`            | Get (or lazily create) a mock by class name              |
+| `registerMock(string $class, MockInterface): self` | Register a pre-built mock directly                       |
+| `close(): void`                                    | Clear all registered mock DTOs and cached mock instances |
 
 ## Usage
 
