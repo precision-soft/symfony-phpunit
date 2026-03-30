@@ -28,7 +28,7 @@ class ManagerRegistryMock implements MockDtoInterface
             ManagerRegistry::class,
             null,
             false,
-            static::getOnCreate(),
+            self::getOnCreate(),
         );
     }
 

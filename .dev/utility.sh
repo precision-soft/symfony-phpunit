@@ -52,9 +52,10 @@ check_container() {
 
     if [[ $(docker_compose_no_log ps -q "${CONTAINER_NAME}") = "" ]]; then
         echo 1
-    else
-        echo 0
+        return
     fi
+
+    echo 0
 }
 
 docker_compose_no_log() {

@@ -14,6 +14,7 @@ use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 class MockDto
 {
     /**
+     * @param class-string $class
      * @param list<MockDto|MockDtoInterface|class-string<MockDtoInterface>|scalar>|null $construct
      */
     public function __construct(
@@ -23,6 +24,7 @@ class MockDto
         private readonly ?Closure $onCreate = null,
     ) {}
 
+    /** @return class-string */
     public function getClass(): string
     {
         return $this->class;

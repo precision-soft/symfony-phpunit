@@ -90,49 +90,51 @@ class MockContainer
 
         $this->creating[$mockDto->getClass()] = true;
 
-        $mockedConstructorArguments = [];
+        try {
+            $mockedConstructorArguments = [];
 
-        foreach ($mockDto->getConstruct() ?? [] as $dependency) {
-            if ($dependency instanceof MockDto) {
-                $mockedConstructorArguments[] = $this->getOrCreateMock($dependency);
+            foreach ($mockDto->getConstruct() ?? [] as $dependency) {
+                if ($dependency instanceof MockDto) {
+                    $mockedConstructorArguments[] = $this->getOrCreateMock($dependency);
 
-                continue;
+                    continue;
+                }
+
+                if ($dependency instanceof MockDtoInterface) {
+                    $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
+
+                    continue;
+                }
+
+                if (true === \is_string($dependency) && true === \is_a($dependency, MockDtoInterface::class, true)) {
+                    /** @var class-string<MockDtoInterface> $dependency */
+                    $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
+
+                    continue;
+                }
+
+                $mockedConstructorArguments[] = $dependency;
             }
 
-            if ($dependency instanceof MockDtoInterface) {
-                $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
-
-                continue;
+            if (null === $mockDto->getConstruct()) {
+                $mockInterface = Mockery::mock($mockDto->getClass());
+            } else {
+                $mockInterface = Mockery::mock($mockDto->getClass(), $mockedConstructorArguments);
             }
 
-            if (true === \is_string($dependency) && true === \is_a($dependency, MockDtoInterface::class, true)) {
-                /** @var class-string<MockDtoInterface> $dependency */
-                $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
+            $this->registerMock($mockDto->getClass(), $mockInterface);
 
-                continue;
+            if (true === $mockDto->getPartial()) {
+                $mockInterface->makePartial();
             }
 
-            $mockedConstructorArguments[] = $dependency;
+            if (null !== $mockDto->getOnCreate()) {
+                $mockDto->getOnCreate()($mockInterface, $this);
+            }
+
+            return $mockInterface;
+        } finally {
+            unset($this->creating[$mockDto->getClass()]);
         }
-
-        if (null === $mockDto->getConstruct()) {
-            $mockInterface = Mockery::mock($mockDto->getClass());
-        } else {
-            $mockInterface = Mockery::mock($mockDto->getClass(), $mockedConstructorArguments);
-        }
-
-        $this->registerMock($mockDto->getClass(), $mockInterface);
-
-        if (true === $mockDto->getPartial()) {
-            $mockInterface->makePartial();
-        }
-
-        if (null !== $mockDto->getOnCreate()) {
-            $mockDto->getOnCreate()($mockInterface, $this);
-        }
-
-        unset($this->creating[$mockDto->getClass()]);
-
-        return $mockInterface;
     }
 }

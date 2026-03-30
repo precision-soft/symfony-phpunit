@@ -25,6 +25,11 @@ composer require --dev precision-soft/symfony-phpunit
 `MockDto` is the central configuration object that describes how a mock should be created.
 
 ```php
+use Mockery\MockInterface;
+use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
+use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+
 new MockDto(
     class: CreateService::class,
     construct: [
@@ -134,6 +139,10 @@ Constructor dependencies are resolved recursively. Each element in `construct` c
 | Scalar (`string`, `int`, `float`, `bool`) | `'api-key-123'`, `42`               | Passed as-is                |
 
 ```php
+use PrecisionSoft\Symfony\Phpunit\Mock\EventDispatcherInterfaceMock;
+use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+
 public static function getMockDto(): MockDto
 {
     return new MockDto(
@@ -158,6 +167,10 @@ public static function getMockDto(): MockDto
 Use the `onCreate` parameter to configure mock behavior after creation:
 
 ```php
+use Mockery\MockInterface;
+use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+
 public static function getMockDto(): MockDto
 {
     return new MockDto(
@@ -180,6 +193,9 @@ public static function getMockDto(): MockDto
 Set the third parameter to `true` to create a partial mock. Real methods are called unless explicitly overridden:
 
 ```php
+use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+
 public static function getMockDto(): MockDto
 {
     return new MockDto(
@@ -212,6 +228,10 @@ Each built-in mock requires additional packages — install them as needed:
 Use `registerMockDto()` to register additional mock configurations during a test:
 
 ```php
+use Mockery\MockInterface;
+use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+
 public function testFoo(): void
 {
     $this->registerMockDto(new MockDto(
@@ -232,6 +252,8 @@ public function testFoo(): void
 Use `registerMock()` to register a pre-built `MockInterface` directly:
 
 ```php
+use Mockery;
+
 public function testFoo(): void
 {
     $mockInterface = Mockery::mock(BarService::class);
