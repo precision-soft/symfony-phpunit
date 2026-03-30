@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.0] - 2026-03-30
+
+### Added
+
+- Add circular dependency detection in `MockContainer::createMock()` — throws `CircularDependencyException` instead of infinite recursion
+- Add `registerMock()` method to `MockContainerTrait` — allows registering pre-built `MockInterface` instances directly from test cases
+- Add `MockeryPHPUnitIntegration` trait to all standalone test classes — ensures Mockery expectations are verified and state is cleaned up
+- Add `failOnRisky` and `failOnWarning` attributes to `phpunit.xml.dist`
+
+### Changed
+
+- Tighten Composer version constraints from wildcard (`1.*`) to caret (`^1.0`) notation
+- Fix `registerMock()` example in README — was accessing private `$this->mockContainer`, now uses public trait API
+- Fix README dev section — replace non-existent `./dc` script with actual `docker compose` commands
+- Add `CircularDependencyException` to README exceptions table
+- Remove `privileged: true` from Docker dev container
+- Regenerate PHPStan baseline for updated line numbers
+
 ## [v2.0.4] - 2026-03-30
 
 ### Changed
@@ -148,6 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v2.1.0]: https://github.com/precision-soft/symfony-phpunit/compare/v2.0.4...v2.1.0
 
 [v2.0.4]: https://github.com/precision-soft/symfony-phpunit/compare/v2.0.3...v2.0.4
 

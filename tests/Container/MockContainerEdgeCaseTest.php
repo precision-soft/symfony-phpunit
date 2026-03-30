@@ -9,12 +9,15 @@ declare(strict_types=1);
 namespace PrecisionSoft\Symfony\Phpunit\Test\Container;
 
 use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
+use PrecisionSoft\Symfony\Phpunit\Exception\CircularDependencyException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\CircularAlphaMock;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
 
 /**
@@ -22,6 +25,8 @@ use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
  */
 final class MockContainerEdgeCaseTest extends TestCase
 {
+    use MockeryPHPUnitIntegration;
+
     private MockContainer $mockContainer;
 
     protected function setUp(): void
@@ -154,5 +159,17 @@ final class MockContainerEdgeCaseTest extends TestCase
         $result = $this->mockContainer->registerMock(SecondMockDto::class, $externalMockInterface);
 
         static::assertSame($this->mockContainer, $result);
+    }
+
+    public function testCircularDependencyThrowsException(): void
+    {
+        $this->mockContainer->registerMockDto(CircularAlphaMock::getMockDto());
+
+        $this->expectException(CircularDependencyException::class);
+        $this->expectExceptionMessage(
+            \sprintf('circular dependency detected for class `%s`', CircularAlphaMock::class),
+        );
+
+        $this->mockContainer->getMock(CircularAlphaMock::class);
     }
 }

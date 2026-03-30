@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace PrecisionSoft\Symfony\Phpunit\Test\Container;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
@@ -29,6 +30,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class MockContainerTest extends TestCase
 {
+    use MockeryPHPUnitIntegration;
+
     private MockContainer $mockContainer;
 
     protected function setUp(): void

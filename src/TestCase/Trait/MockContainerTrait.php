@@ -40,6 +40,15 @@ trait MockContainerTrait
         return $this;
     }
 
+    protected function registerMock(string $class, MockInterface $mockInterface): self
+    {
+        $this->mockContainer ??= new MockContainer();
+
+        $this->mockContainer->registerMock($class, $mockInterface);
+
+        return $this;
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

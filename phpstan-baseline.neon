@@ -31,27 +31,37 @@ parameters:
 			path: tests/Mock/SluggerInterfaceMockTest.php
 
 		-
-			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:25\\:\\:getMockDto\\(\\)\\.$#"
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:110\\:\\:getMockDto\\(\\)\\.$#"
 			count: 1
 			path: tests/TestCase/MockContainerTraitTest.php
 
 		-
-			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:39\\:\\:getMockDto\\(\\)\\.$#"
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:127\\:\\:getMockDto\\(\\)\\.$#"
 			count: 1
 			path: tests/TestCase/MockContainerTraitTest.php
 
 		-
-			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:56\\:\\:getMockDto\\(\\)\\.$#"
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:29\\:\\:getMockDto\\(\\)\\.$#"
 			count: 1
 			path: tests/TestCase/MockContainerTraitTest.php
 
 		-
-			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:74\\:\\:getMockDto\\(\\)\\.$#"
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:43\\:\\:getMockDto\\(\\)\\.$#"
 			count: 1
 			path: tests/TestCase/MockContainerTraitTest.php
 
 		-
-			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:91\\:\\:getMockDto\\(\\)\\.$#"
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:60\\:\\:getMockDto\\(\\)\\.$#"
+			count: 1
+			path: tests/TestCase/MockContainerTraitTest.php
+
+		-
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:78\\:\\:getMockDto\\(\\)\\.$#"
+			count: 1
+			path: tests/TestCase/MockContainerTraitTest.php
+
+		-
+			message: "#^Call to an undefined static method class@anonymous/tests/TestCase/MockContainerTraitTest\\.php\\:95\\:\\:getMockDto\\(\\)\\.$#"
 			count: 1
 			path: tests/TestCase/MockContainerTraitTest.php
 

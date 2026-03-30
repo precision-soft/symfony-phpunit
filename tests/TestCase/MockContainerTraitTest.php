@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Test\TestCase;
 
+use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockContainerNotInitializedException;
@@ -20,6 +22,8 @@ use PrecisionSoft\Symfony\Phpunit\TestCase\Trait\MockContainerTrait;
  */
 final class MockContainerTraitTest extends TestCase
 {
+    use MockeryPHPUnitIntegration;
+
     public function testGetThrowsExceptionWhenMockContainerIsNull(): void
     {
         $testCase = new class extends TestCase {
@@ -97,6 +101,38 @@ final class MockContainerTraitTest extends TestCase
 
         $result = $testCase
             ->registerMockDto(new MockDto(SecondMockDto::class));
+
+        static::assertSame($testCase, $result);
+    }
+
+    public function testRegisterMockRegistersPreBuiltMock(): void
+    {
+        $testCase = new class extends TestCase {
+            use MockContainerTrait {
+                get as public;
+                registerMock as public;
+            }
+        };
+
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
+        $testCase->registerMock(SecondMockDto::class, $externalMockInterface);
+
+        $retrievedMockInterface = $testCase->get(SecondMockDto::class);
+
+        static::assertSame($externalMockInterface, $retrievedMockInterface);
+    }
+
+    public function testRegisterMockReturnsSelf(): void
+    {
+        $testCase = new class extends TestCase {
+            use MockContainerTrait {
+                registerMock as public;
+            }
+        };
+
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
+
+        $result = $testCase->registerMock(SecondMockDto::class, $externalMockInterface);
 
         static::assertSame($testCase, $result);
     }

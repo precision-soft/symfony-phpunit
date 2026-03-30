@@ -11,6 +11,7 @@ namespace PrecisionSoft\Symfony\Phpunit\Container;
 use Mockery;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
+use PrecisionSoft\Symfony\Phpunit\Exception\CircularDependencyException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
@@ -21,6 +22,8 @@ class MockContainer
     private array $mockDtos = [];
     /** @var array<string, MockInterface> */
     private array $mocks = [];
+    /** @var array<string, true> */
+    private array $creating = [];
 
     public function registerMockDto(MockDto $mockDto): self
     {
@@ -65,6 +68,7 @@ class MockContainer
     {
         $this->mockDtos = [];
         $this->mocks = [];
+        $this->creating = [];
     }
 
     private function getOrCreateMock(MockDto $mockDto): MockInterface
@@ -78,6 +82,14 @@ class MockContainer
 
     private function createMock(MockDto $mockDto): MockInterface
     {
+        if (true === isset($this->creating[$mockDto->getClass()])) {
+            throw new CircularDependencyException(
+                \sprintf('circular dependency detected for class `%s`', $mockDto->getClass()),
+            );
+        }
+
+        $this->creating[$mockDto->getClass()] = true;
+
         $mockedConstructorArguments = [];
 
         foreach ($mockDto->getConstruct() ?? [] as $dependency) {
@@ -118,6 +130,8 @@ class MockContainer
         if (null !== $mockDto->getOnCreate()) {
             $mockDto->getOnCreate()($mockInterface, $this);
         }
+
+        unset($this->creating[$mockDto->getClass()]);
 
         return $mockInterface;
     }

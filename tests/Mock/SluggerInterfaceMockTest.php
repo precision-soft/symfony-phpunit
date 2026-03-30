@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Test\Mock;
 
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Mock\SluggerInterfaceMock;
@@ -19,6 +20,8 @@ use Symfony\Component\String\UnicodeString;
  */
 final class SluggerInterfaceMockTest extends TestCase
 {
+    use MockeryPHPUnitIntegration;
+
     private MockContainer $mockContainer;
 
     protected function setUp(): void

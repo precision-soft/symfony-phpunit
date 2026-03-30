@@ -15,6 +15,7 @@ use Doctrine\ORM\Id\AbstractIdGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
@@ -27,6 +28,8 @@ use stdClass;
  */
 final class ManagerRegistryMockTest extends TestCase
 {
+    use MockeryPHPUnitIntegration;
+
     private MockContainer $mockContainer;
 
     protected function setUp(): void

@@ -237,9 +237,9 @@ public function testFoo(): void
     $mockInterface = Mockery::mock(BarService::class);
     $mockInterface->shouldReceive('process')->once()->andReturn(true);
 
-    $this->mockContainer->registerMock(BarService::class, $mockInterface);
+    $this->registerMock(BarService::class, $mockInterface);
 
-    $barService = $this->mockContainer->getMock(BarService::class);
+    $barService = $this->get(BarService::class);
 }
 ```
 
@@ -249,6 +249,7 @@ All exceptions are in the `PrecisionSoft\Symfony\Phpunit\Exception` namespace:
 
 | Exception                              | Thrown when                                            |
 |----------------------------------------|--------------------------------------------------------|
+| `CircularDependencyException`          | Circular dependency detected during mock creation      |
 | `ClassNotFoundException`               | `getReference()` is called with a non-existent class   |
 | `MockAlreadyRegisteredException`       | A mock or `MockDto` is registered twice for same class |
 | `MockNotFoundException`                | `getMock()` is called for an unregistered class        |
@@ -258,7 +259,18 @@ All exceptions are in the `PrecisionSoft\Symfony\Phpunit\Exception` namespace:
 
 ```shell
 git clone git@github.com:precision-soft/symfony-phpunit.git
-cd symfony-phpunit
+cd symfony-phpunit/.dev/docker
 
-./dc build && ./dc up -d
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -d --build
+docker compose exec dev bash
+```
+
+Inside the container:
+
+```shell
+composer install     # install dependencies
+punit                # run tests
+pfix                 # auto-format
+pstan                # static analysis
+full                 # all of the above
 ```
