@@ -100,4 +100,16 @@ final class MockContainerTraitTest extends TestCase
 
         static::assertSame($mockContainerTraitTestCase, $result);
     }
+
+    public function testRegisterMockInitializesContainerOnFirstCall(): void
+    {
+        $mockContainerTraitTestCase = new MockContainerTraitTestCase();
+
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
+        $mockContainerTraitTestCase->registerMock(SecondMockDto::class, $externalMockInterface);
+
+        $retrievedMockInterface = $mockContainerTraitTestCase->get(SecondMockDto::class);
+
+        static::assertSame($externalMockInterface, $retrievedMockInterface);
+    }
 }

@@ -43,6 +43,10 @@ class ManagerRegistryMock implements MockDtoInterface
 
     private static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
     {
+        if (true === $mockContainer->hasMock(EntityManagerInterface::class)) {
+            return $mockContainer->getMock(EntityManagerInterface::class);
+        }
+
         $mockContainer->registerMockDto(
             new MockDto(
                 EntityManagerInterface::class,
@@ -118,6 +122,10 @@ class ManagerRegistryMock implements MockDtoInterface
 
     private static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
     {
+        if (true === $mockContainer->hasMock(ClassMetadata::class)) {
+            return $mockContainer->getMock(ClassMetadata::class);
+        }
+
         $mockContainer->registerMockDto(
             new MockDto(
                 ClassMetadata::class,
@@ -140,6 +148,10 @@ class ManagerRegistryMock implements MockDtoInterface
 
     private static function getConnectionMock(MockContainer $mockContainer): MockInterface
     {
+        if (true === $mockContainer->hasMock(Connection::class)) {
+            return $mockContainer->getMock(Connection::class);
+        }
+
         $mockContainer->registerMockDto(
             new MockDto(
                 Connection::class,

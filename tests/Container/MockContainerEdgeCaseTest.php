@@ -14,6 +14,7 @@ use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\CircularDependencyException;
+use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
@@ -171,5 +172,55 @@ final class MockContainerEdgeCaseTest extends TestCase
         );
 
         $this->mockContainer->getMock(CircularAlphaMock::class);
+    }
+
+    public function testCloseResetsCreatingGuardAfterCircularDependency(): void
+    {
+        $this->mockContainer->registerMockDto(CircularAlphaMock::getMockDto());
+
+        try {
+            $this->mockContainer->getMock(CircularAlphaMock::class);
+        } catch (CircularDependencyException) {
+        }
+
+        $this->mockContainer->close();
+
+        $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class));
+        $mockInterface = $this->mockContainer->getMock(SecondMockDto::class);
+
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
+    }
+
+    public function testOnCreateExceptionCleansMockFromRegistry(): void
+    {
+        $callCount = 0;
+
+        $mockDto = new MockDto(
+            SecondMockDto::class,
+            null,
+            false,
+            static function (MockInterface $mockInterface, MockContainer $mockContainer) use (&$callCount): void {
+                ++$callCount;
+
+                if (1 === $callCount) {
+                    throw new Exception('onCreate failure');
+                }
+            },
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        try {
+            $this->mockContainer->getMock(SecondMockDto::class);
+            static::fail('Expected Exception was not thrown');
+        } catch (Exception $exception) {
+            static::assertSame('onCreate failure', $exception->getMessage());
+        }
+
+        /** @info Second call succeeds — mock was cleaned from registry, so createMock runs again */
+        $mockInterface = $this->mockContainer->getMock(SecondMockDto::class);
+
+        static::assertInstanceOf(MockInterface::class, $mockInterface);
+        static::assertSame(2, $callCount);
     }
 }

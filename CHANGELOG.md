@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.2] - 2026-04-01
+
+### Added
+
+- Add `hasMock(string $class): bool` method to `MockContainer` — checks if a mock or mock DTO is registered for a class
+- Add `phpstan/phpstan-mockery` extension — resolves `byDefault()` false positives, reducing PHPStan baseline from 6 to 3 entries
+- Add `export-ignore` rules to `.gitattributes` — excludes tests, dev infrastructure, and config from Composer installs
+- Add `MockContainerTrait` standalone usage section to README
+- Add PHP version, PHPStan level, code style, and license badges to README
+
+### Changed
+
+- Remove `final` from `MockContainer` and `MockDto` — allow library consumers to extend
+- Replace `\Throwable` FQN with `use Throwable` import in `MockContainer`
+- Guard pre-existing mock registration in `ManagerRegistryMock` — `getEntityManagerMock()`, `getClassMetadataMock()`, `getConnectionMock()` now skip registration when the mock already exists, preventing `MockAlreadyRegisteredException`
+
+### Removed
+
+- Remove stale `AUDIT_REPORT.md` (outdated v1.1.3 report)
+
 ## [v2.1.1] - 2026-03-30
 
 ### Changed
@@ -177,6 +197,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v2.1.2]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.1...v2.1.2
 
 [v2.1.1]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.0...v2.1.1
 

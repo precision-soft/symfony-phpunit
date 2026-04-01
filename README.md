@@ -1,5 +1,10 @@
 # Symfony Phpunit
 
+[![PHP >= 8.2](https://img.shields.io/badge/php-%3E%3D8.2-8892BF)](https://www.php.net/)
+[![PHPStan Level 8](https://img.shields.io/badge/phpstan-level%208-brightgreen)](https://phpstan.org/)
+[![Code Style PER-CS2.0](https://img.shields.io/badge/code%20style-PER--CS2.0-blue)](https://www.php-fig.org/per/coding-style/)
+[![License MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 A Mockery-based testing library for Symfony applications that simplifies mock creation, dependency injection, and test setup through a declarative `MockDto` configuration pattern.
 
 **You may fork and modify it as you wish**.
@@ -126,6 +131,71 @@ final class CreateServiceTest extends AbstractTestCase
     }
 }
 ```
+
+### Kernel Test Case
+
+Extend `AbstractKernelTestCase` for tests that need the Symfony kernel (e.g. testing services wired through the container):
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Test\Foo\Service;
+
+use Acme\Foo\Repository\FooRepository;
+use Acme\Foo\Service\CreateService;
+use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\TestCase\AbstractKernelTestCase;
+
+final class CreateServiceKernelTest extends AbstractKernelTestCase
+{
+    public static function getMockDto(): MockDto
+    {
+        return new MockDto(
+            CreateService::class,
+            [
+                ManagerRegistryMock::class,
+                new MockDto(FooRepository::class),
+            ],
+        );
+    }
+
+    public function testCreate(): void
+    {
+        $createService = $this->get(CreateService::class);
+
+        static::assertInstanceOf(CreateService::class, $createService);
+    }
+}
+```
+
+`AbstractKernelTestCase` extends Symfony's `KernelTestCase`, so `self::bootKernel()`, `self::getContainer()`, and all kernel test utilities are available alongside the mock container.
+
+### Using MockContainerTrait Directly
+
+If you need a custom base test case instead of extending `AbstractTestCase` or `AbstractKernelTestCase`, use `MockContainerTrait` directly. Your test class must implement `MockDtoInterface`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Test;
+
+use PHPUnit\Framework\TestCase;
+use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\TestCase\Trait\MockContainerTrait;
+
+abstract class CustomTestCase extends TestCase implements MockDtoInterface
+{
+    use MockContainerTrait;
+}
+```
+
+The trait provides `setUp()` (registers the mock from `getMockDto()`), `tearDown()` (closes the container), `get()`, `registerMockDto()`, and `registerMock()`.
 
 ### Nested Dependencies
 

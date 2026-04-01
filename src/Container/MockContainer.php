@@ -15,6 +15,7 @@ use PrecisionSoft\Symfony\Phpunit\Exception\CircularDependencyException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use Throwable;
 
 class MockContainer
 {
@@ -62,6 +63,11 @@ class MockContainer
         $this->mocks[$class] = $mockInterface;
 
         return $this;
+    }
+
+    public function hasMock(string $class): bool
+    {
+        return true === isset($this->mocks[$class]) || true === isset($this->mockDtos[$class]);
     }
 
     public function close(): void
@@ -128,8 +134,14 @@ class MockContainer
                 $mockInterface->makePartial();
             }
 
-            if (null !== $mockDto->getOnCreate()) {
-                $mockDto->getOnCreate()($mockInterface, $this);
+            try {
+                if (null !== $mockDto->getOnCreate()) {
+                    $mockDto->getOnCreate()($mockInterface, $this);
+                }
+            } catch (Throwable $throwable) {
+                unset($this->mocks[$mockDto->getClass()]);
+
+                throw $throwable;
             }
 
             return $mockInterface;

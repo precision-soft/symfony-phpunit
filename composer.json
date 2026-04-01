@@ -25,6 +25,7 @@
         "doctrine/orm": "^3.0",
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan": "^1.0",
+        "phpstan/phpstan-mockery": "^1.1",
         "symfony/framework-bundle": "^7.0"
     },
     "autoload": {
