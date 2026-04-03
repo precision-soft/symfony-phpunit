@@ -197,6 +197,68 @@ abstract class CustomTestCase extends TestCase implements MockDtoInterface
 
 The trait provides `setUp()` (registers the mock from `getMockDto()`), `tearDown()` (closes the container), `get()`, `registerMockDto()`, and `registerMock()`.
 
+### Extending AbstractTestCase
+
+When your project needs shared test helpers (e.g. factory methods, common assertions, or reusable setup logic), create your own base test case that extends `AbstractTestCase`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Test;
+
+use PrecisionSoft\Symfony\Phpunit\TestCase\AbstractTestCase;
+
+abstract class ProjectTestCase extends AbstractTestCase
+{
+    protected function createValidEntity(): Entity
+    {
+        $entity = new Entity();
+        $entity->setName('default');
+
+        return $entity;
+    }
+}
+```
+
+All concrete test classes then extend `ProjectTestCase` and implement `getMockDto()` as usual:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Test\Foo\Service;
+
+use Acme\Foo\Service\CreateService;
+use Acme\Test\ProjectTestCase;
+use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
+use PrecisionSoft\Symfony\Phpunit\MockDto;
+
+final class CreateServiceTest extends ProjectTestCase
+{
+    public static function getMockDto(): MockDto
+    {
+        return new MockDto(
+            CreateService::class,
+            [ManagerRegistryMock::class],
+            true,
+        );
+    }
+
+    public function testCreate(): void
+    {
+        $entity = $this->createValidEntity();
+        $createService = $this->get(CreateService::class);
+
+        /** test with shared helper */
+    }
+}
+```
+
+The same pattern applies to `AbstractKernelTestCase` — extend it when kernel access is needed alongside your shared helpers.
+
 ### Nested Dependencies
 
 Constructor dependencies are resolved recursively. Each element in `construct` can be:

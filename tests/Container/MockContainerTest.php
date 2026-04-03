@@ -17,8 +17,10 @@ use PrecisionSoft\Symfony\Phpunit\Mock\EventDispatcherInterfaceMock;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
 use PrecisionSoft\Symfony\Phpunit\Mock\SluggerInterfaceMock;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\DeepNestedServiceDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\FirstMockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\MixedConstructorDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\NullableConstructorDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\ScalarConstructorDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\ThirdMockDtoInterface;
@@ -194,5 +196,88 @@ final class MockContainerTest extends TestCase
         static::assertInstanceOf(EventDispatcherInterface::class, $mixedConstructorDto->getEventDispatcher());
         static::assertSame('static-name', $mixedConstructorDto->getName());
         static::assertSame(99, $mixedConstructorDto->getCount());
+    }
+
+    public function testDeepNestedChainResolvesThreeLevels(): void
+    {
+        $mockDto = new MockDto(
+            DeepNestedServiceDto::class,
+            [
+                new MockDto(
+                    FirstMockDto::class,
+                    [
+                        new MockDto(SecondMockDto::class),
+                        EventDispatcherInterfaceMock::class,
+                        ManagerRegistryMock::class,
+                        SluggerInterfaceMock::class,
+                    ],
+                    true,
+                ),
+                'secret-api-key',
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var DeepNestedServiceDto $deepNestedServiceDto */
+        $deepNestedServiceDto = $this->mockContainer->getMock(DeepNestedServiceDto::class);
+
+        static::assertInstanceOf(MockInterface::class, $deepNestedServiceDto);
+        static::assertInstanceOf(DeepNestedServiceDto::class, $deepNestedServiceDto);
+        static::assertSame('secret-api-key', $deepNestedServiceDto->getApiKey());
+
+        /** @var FirstMockDto $firstMockDto */
+        $firstMockDto = $deepNestedServiceDto->getFirstMockDto();
+
+        static::assertInstanceOf(MockInterface::class, $firstMockDto);
+        static::assertInstanceOf(FirstMockDto::class, $firstMockDto);
+        static::assertInstanceOf(SecondMockDto::class, $firstMockDto->getSecondMockDto());
+        static::assertInstanceOf(EventDispatcherInterface::class, $firstMockDto->getEventDispatcher());
+        static::assertInstanceOf(ManagerRegistry::class, $firstMockDto->getManagerRegistry());
+        static::assertInstanceOf(SluggerInterface::class, $firstMockDto->getSlugger());
+    }
+
+    public function testConstructDependencyWithNullableParametersUsingDefaults(): void
+    {
+        $mockDto = new MockDto(
+            NullableConstructorDto::class,
+            [
+                'required-name',
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var NullableConstructorDto $nullableConstructorDto */
+        $nullableConstructorDto = $this->mockContainer->getMock(NullableConstructorDto::class);
+
+        static::assertSame('required-name', $nullableConstructorDto->getName());
+        static::assertNull($nullableConstructorDto->getSecondMockDto());
+        static::assertNull($nullableConstructorDto->getPriority());
+    }
+
+    public function testConstructDependencyWithNullableParametersMixedWithMocks(): void
+    {
+        $mockDto = new MockDto(
+            NullableConstructorDto::class,
+            [
+                'with-mock',
+                new MockDto(SecondMockDto::class),
+                42,
+            ],
+            true,
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        /** @var NullableConstructorDto $nullableConstructorDto */
+        $nullableConstructorDto = $this->mockContainer->getMock(NullableConstructorDto::class);
+
+        static::assertSame('with-mock', $nullableConstructorDto->getName());
+        static::assertInstanceOf(MockInterface::class, $nullableConstructorDto->getSecondMockDto());
+        static::assertInstanceOf(SecondMockDto::class, $nullableConstructorDto->getSecondMockDto());
+        static::assertSame(42, $nullableConstructorDto->getPriority());
     }
 }

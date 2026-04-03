@@ -162,6 +162,36 @@ final class MockContainerEdgeCaseTest extends TestCase
         static::assertSame($this->mockContainer, $result);
     }
 
+    public function testHasMockReturnsFalseWhenNothingRegistered(): void
+    {
+        static::assertFalse($this->mockContainer->hasMock(SecondMockDto::class));
+    }
+
+    public function testHasMockReturnsTrueAfterRegisterMockDto(): void
+    {
+        $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class));
+
+        static::assertTrue($this->mockContainer->hasMock(SecondMockDto::class));
+    }
+
+    public function testHasMockReturnsTrueAfterRegisterMock(): void
+    {
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
+        $this->mockContainer->registerMock(SecondMockDto::class, $externalMockInterface);
+
+        static::assertTrue($this->mockContainer->hasMock(SecondMockDto::class));
+    }
+
+    public function testHasMockReturnsFalseAfterClose(): void
+    {
+        $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class));
+        $this->mockContainer->getMock(SecondMockDto::class);
+
+        $this->mockContainer->close();
+
+        static::assertFalse($this->mockContainer->hasMock(SecondMockDto::class));
+    }
+
     public function testCircularDependencyThrowsException(): void
     {
         $this->mockContainer->registerMockDto(CircularAlphaMock::getMockDto());

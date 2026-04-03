@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.3] - 2026-04-03
+
+### Added
+
+- Add `hasMock()` tests — covers false when nothing registered, true after `registerMockDto()`, true after `registerMock()`, false after `close()`
+- Add deep nested chain test (3+ levels) — validates recursive dependency resolution across `DeepNestedServiceDto` → `FirstMockDto` → `SecondMockDto`
+- Add nullable constructor parameter tests — validates optional parameters using defaults and mixed with mock dependencies
+- Add `DeepNestedServiceDto` and `NullableConstructorDto` test utility classes
+- Add `Extending AbstractTestCase` section to README — documents custom base test case pattern with shared helpers
+
 ## [v2.1.2] - 2026-04-01
 
 ### Added
@@ -197,6 +207,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v2.1.3]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.2...v2.1.3
 
 [v2.1.2]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.1...v2.1.2
 
