@@ -53,7 +53,7 @@ final class MockContainerTraitTest extends TestCase
 
         $mockContainerTraitTearDownTestCase->traitTearDown();
 
-        static::assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     public function testRegisterMockDtoInitializesContainerOnFirstCall(): void

@@ -39,6 +39,7 @@ class MockContainer
         return $this;
     }
 
+    /** @param class-string $class */
     public function getMock(string $class): MockInterface
     {
         if (false === isset($this->mocks[$class])) {
@@ -52,6 +53,7 @@ class MockContainer
         return $this->mocks[$class];
     }
 
+    /** @param class-string $class */
     public function registerMock(string $class, MockInterface $mockInterface): self
     {
         if (true === isset($this->mocks[$class])) {
@@ -65,6 +67,7 @@ class MockContainer
         return $this;
     }
 
+    /** @param class-string $class */
     public function hasMock(string $class): bool
     {
         return true === isset($this->mocks[$class]) || true === isset($this->mockDtos[$class]);
@@ -135,8 +138,10 @@ class MockContainer
             }
 
             try {
-                if (null !== $mockDto->getOnCreate()) {
-                    $mockDto->getOnCreate()($mockInterface, $this);
+                $onCreateClosure = $mockDto->getOnCreate();
+
+                if (null !== $onCreateClosure) {
+                    $onCreateClosure($mockInterface, $this);
                 }
             } catch (Throwable $throwable) {
                 unset($this->mocks[$mockDto->getClass()]);

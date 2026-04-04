@@ -20,6 +20,7 @@ trait MockContainerTrait
 
     private ?MockContainer $mockContainer = null;
 
+    /** @param class-string $class */
     protected function get(string $class): MockInterface
     {
         if (null === $this->mockContainer) {
@@ -40,6 +41,7 @@ trait MockContainerTrait
         return $this;
     }
 
+    /** @param class-string $class */
     protected function registerMock(string $class, MockInterface $mockInterface): self
     {
         $this->mockContainer ??= new MockContainer();

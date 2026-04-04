@@ -26,6 +26,6 @@ class MockContainerTraitTearDownTestCase extends TestCase implements MockDtoInte
 
     public function testNothing(): void
     {
-        static::assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 }

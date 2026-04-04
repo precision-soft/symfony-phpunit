@@ -65,7 +65,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var FirstMockDto $firstMockDto */
+        /** @var MockInterface&FirstMockDto $firstMockDto */
         $firstMockDto = $this->mockContainer->getMock(FirstMockDto::class);
 
         static::assertInstanceOf(MockInterface::class, $firstMockDto);
@@ -90,7 +90,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var FirstMockDto $firstMockDto */
+        /** @var MockInterface&FirstMockDto $firstMockDto */
         $firstMockDto = $this->mockContainer->getMock(FirstMockDto::class);
 
         static::assertInstanceOf(SecondMockDto::class, $firstMockDto->getSecondMockDto());
@@ -114,7 +114,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var FirstMockDto $firstMockDto */
+        /** @var MockInterface&FirstMockDto $firstMockDto */
         $firstMockDto = $this->mockContainer->getMock(FirstMockDto::class);
 
         static::assertInstanceOf(MockInterface::class, $this->mockContainer->getMock(EventDispatcherInterface::class));
@@ -139,7 +139,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var ScalarConstructorDto $scalarConstructorDto */
+        /** @var MockInterface&ScalarConstructorDto $scalarConstructorDto */
         $scalarConstructorDto = $this->mockContainer->getMock(ScalarConstructorDto::class);
 
         static::assertSame('test-name', $scalarConstructorDto->getName());
@@ -164,7 +164,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var MixedConstructorDto $mixedConstructorDto */
+        /** @var MockInterface&MixedConstructorDto $mixedConstructorDto */
         $mixedConstructorDto = $this->mockContainer->getMock(MixedConstructorDto::class);
 
         static::assertInstanceOf(MockInterface::class, $mixedConstructorDto->getSecondMockDto());
@@ -189,7 +189,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var MixedConstructorDto $mixedConstructorDto */
+        /** @var MockInterface&MixedConstructorDto $mixedConstructorDto */
         $mixedConstructorDto = $this->mockContainer->getMock(MixedConstructorDto::class);
 
         static::assertInstanceOf(SecondMockDto::class, $mixedConstructorDto->getSecondMockDto());
@@ -220,14 +220,14 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var DeepNestedServiceDto $deepNestedServiceDto */
+        /** @var MockInterface&DeepNestedServiceDto $deepNestedServiceDto */
         $deepNestedServiceDto = $this->mockContainer->getMock(DeepNestedServiceDto::class);
 
         static::assertInstanceOf(MockInterface::class, $deepNestedServiceDto);
         static::assertInstanceOf(DeepNestedServiceDto::class, $deepNestedServiceDto);
         static::assertSame('secret-api-key', $deepNestedServiceDto->getApiKey());
 
-        /** @var FirstMockDto $firstMockDto */
+        /** @var MockInterface&FirstMockDto $firstMockDto */
         $firstMockDto = $deepNestedServiceDto->getFirstMockDto();
 
         static::assertInstanceOf(MockInterface::class, $firstMockDto);
@@ -250,7 +250,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var NullableConstructorDto $nullableConstructorDto */
+        /** @var MockInterface&NullableConstructorDto $nullableConstructorDto */
         $nullableConstructorDto = $this->mockContainer->getMock(NullableConstructorDto::class);
 
         static::assertSame('required-name', $nullableConstructorDto->getName());
@@ -272,7 +272,7 @@ final class MockContainerTest extends TestCase
 
         $this->mockContainer->registerMockDto($mockDto);
 
-        /** @var NullableConstructorDto $nullableConstructorDto */
+        /** @var MockInterface&NullableConstructorDto $nullableConstructorDto */
         $nullableConstructorDto = $this->mockContainer->getMock(NullableConstructorDto::class);
 
         static::assertSame('with-mock', $nullableConstructorDto->getName());

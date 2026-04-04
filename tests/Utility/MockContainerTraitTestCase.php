@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Test\Utility;
 
-use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
@@ -20,6 +19,12 @@ class MockContainerTraitTestCase extends TestCase implements MockDtoInterface
         get as public;
         registerMockDto as public;
         registerMock as public;
+    }
+
+    /** @phpstan-ignore method.parentMethodFinalByPhpDoc */
+    public function __construct(?string $name = null)
+    {
+        parent::__construct($name ?? static::class);
     }
 
     public static function getMockDto(): MockDto

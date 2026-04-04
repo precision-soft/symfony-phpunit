@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.0] - 2026-04-04
+
+### Breaking Changes
+
+- Upgrade from PHPUnit 9 to PHPUnit 11.5 — consumers must update their `phpunit.xml.dist` to PHPUnit 11 format (`<source>` instead of `<coverage>`, `<extensions>` instead of `<listeners>`, `SYMFONY_PHPUNIT_VERSION` set to `11.5`)
+- Upgrade from PHPStan 1.x to PHPStan 2.x (`phpstan/phpstan: ^2.0`, `phpstan/phpstan-mockery: ^2.0`)
+
+### Changed
+
+- Replace `<coverage processUncoveredFiles="true">` with `<source>` element in `phpunit.xml.dist`
+- Replace `<listeners>` with `<extensions>` using `Symfony\Bridge\PhpUnit\SymfonyExtension`
+- Add `@param class-string` PHPDoc to `MockContainer::getMock()`, `registerMock()`, `hasMock()` and `MockContainerTrait::get()`, `registerMock()`
+- Extract `$onCreateClosure` variable in `MockContainer::createMock()` to avoid double `getOnCreate()` call
+- Use `MockInterface&ConcreteClass` intersection types in test `@var` annotations for PHPStan 2 compatibility
+- Replace `assertTrue(true)` with `addToAssertionCount(1)` in no-op test methods
+- Remove unused `Mockery\MockInterface` import from `MockContainerTraitTestCase`
+
 ## [v2.1.3] - 2026-04-03
 
 ### Added
@@ -207,6 +224,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v3.0.0]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.3...v3.0.0
 
 [v2.1.3]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.2...v2.1.3
 
