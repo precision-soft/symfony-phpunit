@@ -11,8 +11,10 @@ namespace PrecisionSoft\Symfony\Phpunit\Mock;
 use Closure;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
+use Mockery;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
@@ -36,6 +38,10 @@ class ManagerRegistryMock implements MockDtoInterface
     {
         return static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
             $mockInterface->shouldReceive('getManager')
+                ->byDefault()
+                ->andReturn(self::getEntityManagerMock($mockContainer));
+
+            $mockInterface->shouldReceive('getManagerForClass')
                 ->byDefault()
                 ->andReturn(self::getEntityManagerMock($mockContainer));
         };
@@ -84,8 +90,8 @@ class ManagerRegistryMock implements MockDtoInterface
                     $mockInterface->shouldReceive('getReference')
                         ->byDefault()
                         ->andReturnUsing(
-                            static function (string $entityName, mixed $id): object {
-                                if (false === class_exists($entityName)) {
+                            static function (string $entityName, mixed $entityId): object {
+                                if (false === \class_exists($entityName)) {
                                     throw new ClassNotFoundException(\sprintf('class `%s` does not exist', $entityName));
                                 }
 
@@ -99,7 +105,7 @@ class ManagerRegistryMock implements MockDtoInterface
                                 }
 
                                 if (true === \method_exists($entity, 'setId')) {
-                                    $entity->setId($id);
+                                    $entity->setId($entityId);
                                 }
 
                                 return $entity;
@@ -109,6 +115,10 @@ class ManagerRegistryMock implements MockDtoInterface
                     $mockInterface->shouldReceive('getClassMetadata')
                         ->byDefault()
                         ->andReturn(self::getClassMetadataMock($mockContainer));
+
+                    $mockInterface->shouldReceive('getRepository')
+                        ->byDefault()
+                        ->andReturn(Mockery::mock(EntityRepository::class));
 
                     $mockInterface->shouldReceive('getConnection')
                         ->byDefault()

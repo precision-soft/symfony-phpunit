@@ -20,7 +20,11 @@ trait MockContainerTrait
 
     private ?MockContainer $mockContainer = null;
 
-    /** @param class-string $class */
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @return MockInterface&T
+     */
     protected function get(string $class): MockInterface
     {
         if (null === $this->mockContainer) {
@@ -61,6 +65,7 @@ trait MockContainerTrait
     protected function tearDown(): void
     {
         $this->mockContainer?->close();
+        $this->mockContainer = null;
 
         parent::tearDown();
     }

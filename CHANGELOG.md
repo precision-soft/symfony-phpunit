@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.1] - 2026-04-05
+
+### Added
+
+- `ManagerRegistryMock` — default `getRepository()` mock on EntityManager (returns `Mockery::mock(EntityRepository::class)`)
+- `ManagerRegistryMock` — default `getManagerForClass()` mock on ManagerRegistry
+- `MockContainer::getMock()` and `MockContainerTrait::get()` — `@template T` generic return type annotations (`MockInterface&T`)
+
+### Fixed
+
+- `MockContainerTrait::tearDown()` — null out `$mockContainer` after `close()` to allow garbage collection
+
+### Changed
+
+- `ManagerRegistryMock` — rename `$id` parameter to `$entityId` in `getReference` closure
+- `ManagerRegistryMock` — add `\` prefix to `class_exists()` call
+- `TestKernel` — add `\` prefix to `sys_get_temp_dir()` calls for consistency
+- Move `symfony/string` from `suggest` to `require` — `SluggerInterfaceMock` depends on it at runtime
+- `.dev/docker/entrypoint.sh` — skip `composer install` when `composer.lock` hash matches cached vendor
+- Update `phpstan-baseline.neon`
+
 ## [v3.0.0] - 2026-04-04
 
 ### Breaking Changes

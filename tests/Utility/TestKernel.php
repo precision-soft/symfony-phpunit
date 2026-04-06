@@ -22,11 +22,11 @@ class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir() . '/symfony-phpunit-test/cache';
+        return \sys_get_temp_dir() . '/symfony-phpunit-test/cache';
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir() . '/symfony-phpunit-test/log';
+        return \sys_get_temp_dir() . '/symfony-phpunit-test/log';
     }
 }

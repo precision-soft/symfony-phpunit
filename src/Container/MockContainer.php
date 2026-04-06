@@ -39,7 +39,11 @@ class MockContainer
         return $this;
     }
 
-    /** @param class-string $class */
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @return MockInterface&T
+     */
     public function getMock(string $class): MockInterface
     {
         if (false === isset($this->mocks[$class])) {

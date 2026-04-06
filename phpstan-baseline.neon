@@ -1,16 +1,49 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Call to an undefined method Mockery\\\\MockInterface\\:\\:dispatch\\(\\)\\.$#"
+			message: '#^Method PrecisionSoft\\Symfony\\Phpunit\\Container\\MockContainer\:\:getMock\(\) should return Mockery\\MockInterface&T of object but returns Mockery\\MockInterface\.$#'
+			identifier: return.type
 			count: 1
-			path: tests/Mock/EventDispatcherInterfaceMockTest.php
+			path: src/Container/MockContainer.php
 
 		-
-			message: "#^Call to an undefined method Mockery\\\\MockInterface\\:\\:getManager\\(\\)\\.$#"
-			count: 18
+			message: '#^Call to an undefined method Doctrine\\Persistence\\Mapping\\ClassMetadata\<stdClass\>\:\:setIdGenerator\(\)\.$#'
+			identifier: method.notFound
+			count: 1
 			path: tests/Mock/ManagerRegistryMockTest.php
 
 		-
-			message: "#^Call to an undefined method Mockery\\\\MockInterface\\:\\:slug\\(\\)\\.$#"
+			message: '#^Call to an undefined method Doctrine\\Persistence\\Mapping\\ClassMetadata\<stdClass\>\:\:setIdGeneratorType\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Mock/ManagerRegistryMockTest.php
+
+		-
+			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:beginTransaction\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Mock/ManagerRegistryMockTest.php
+
+		-
+			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:commit\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Mock/ManagerRegistryMockTest.php
+
+		-
+			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:getConnection\(\)\.$#'
+			identifier: method.notFound
 			count: 2
-			path: tests/Mock/SluggerInterfaceMockTest.php
+			path: tests/Mock/ManagerRegistryMockTest.php
+
+		-
+			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:getReference\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/Mock/ManagerRegistryMockTest.php
+
+		-
+			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:rollback\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Mock/ManagerRegistryMockTest.php

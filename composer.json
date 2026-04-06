@@ -18,7 +18,8 @@
     "require": {
         "php": ">=8.2",
         "mockery/mockery": "^1.0",
-        "symfony/phpunit-bridge": "^7.0"
+        "symfony/phpunit-bridge": "^7.0",
+        "symfony/string": "^7.0"
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^2.0",
@@ -51,8 +52,7 @@
     },
     "suggest": {
         "doctrine/orm": "Required to use ManagerRegistryMock",
-        "doctrine/doctrine-bundle": "Required to use ManagerRegistryMock",
-        "symfony/string": "Required to use SluggerInterfaceMock"
+        "doctrine/doctrine-bundle": "Required to use ManagerRegistryMock"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
