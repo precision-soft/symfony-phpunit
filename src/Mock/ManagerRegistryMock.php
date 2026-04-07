@@ -81,7 +81,6 @@ class ManagerRegistryMock implements MockDtoInterface
 
     private static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
     {
-        /** @var array<string, MockInterface> $repositoryMocks */
         $repositoryMocks = [];
 
         return $mockContainer->getOrRegisterMock(

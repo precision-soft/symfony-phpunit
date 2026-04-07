@@ -11,7 +11,7 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\Utility;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 
-class ThirdMockDtoInterface implements MockDtoInterface
+class ThirdMockDto implements MockDtoInterface
 {
     public static function getMockDto(): MockDto
     {

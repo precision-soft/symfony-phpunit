@@ -7,6 +7,12 @@ parameters:
 			path: src/Container/MockContainer.php
 
 		-
+			message: '#^Trait PrecisionSoft\\Symfony\\Phpunit\\TestCase\\Trait\\ManagerRegistryMockTrait is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/TestCase/Trait/ManagerRegistryMockTrait.php
+
+		-
 			message: '#^Call to an undefined method Doctrine\\Persistence\\Mapping\\ClassMetadata\<stdClass\>\:\:setIdGenerator\(\)\.$#'
 			identifier: method.notFound
 			count: 1

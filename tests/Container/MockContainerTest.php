@@ -23,7 +23,7 @@ use PrecisionSoft\Symfony\Phpunit\Test\Utility\MixedConstructorDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\NullableConstructorDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\ScalarConstructorDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
-use PrecisionSoft\Symfony\Phpunit\Test\Utility\ThirdMockDtoInterface;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ThirdMockDto;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -149,7 +149,7 @@ final class MockContainerTest extends TestCase
 
     public function testConstructDependencyAsMockDtoInterfaceInstance(): void
     {
-        $thirdMockDtoInterface = new ThirdMockDtoInterface();
+        $thirdMockDtoInterface = new ThirdMockDto();
 
         $mockDto = new MockDto(
             MixedConstructorDto::class,
@@ -256,6 +256,26 @@ final class MockContainerTest extends TestCase
         static::assertSame('required-name', $nullableConstructorDto->getName());
         static::assertNull($nullableConstructorDto->getSecondMockDto());
         static::assertNull($nullableConstructorDto->getPriority());
+    }
+
+    public function testGetOrRegisterMockCreatesAndReturnsMockWhenNotRegistered(): void
+    {
+        $mockDto = new MockDto(SecondMockDto::class);
+
+        $mock = $this->mockContainer->getOrRegisterMock($mockDto);
+
+        static::assertInstanceOf(MockInterface::class, $mock);
+        static::assertInstanceOf(SecondMockDto::class, $mock);
+    }
+
+    public function testGetOrRegisterMockReturnsSameMockOnSubsequentCalls(): void
+    {
+        $mockDto = new MockDto(SecondMockDto::class);
+
+        $first = $this->mockContainer->getOrRegisterMock($mockDto);
+        $second = $this->mockContainer->getOrRegisterMock($mockDto);
+
+        static::assertSame($first, $second);
     }
 
     public function testConstructDependencyWithNullableParametersMixedWithMocks(): void

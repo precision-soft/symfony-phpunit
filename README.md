@@ -351,7 +351,26 @@ Each built-in mock requires additional packages — install them as needed:
 | `SluggerInterfaceMock`         | `symfony/string`                                            |
 | `EventDispatcherInterfaceMock` | `symfony/event-dispatcher-contracts` (included via Symfony) |
 
-- **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`.
+- **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`. When calling `setManagedEntityClasses()` in a test, include `ManagerRegistryMockTrait` in your test class to automatically reset the static state after each test:
+
+```php
+use PrecisionSoft\Symfony\Phpunit\TestCase\Trait\ManagerRegistryMockTrait;
+
+final class CreateServiceTest extends AbstractTestCase
+{
+    use ManagerRegistryMockTrait;
+
+    public static function getMockDto(): MockDto { ... }
+
+    public function testCreate(): void
+    {
+        ManagerRegistryMock::setManagedEntityClasses([Customer::class]);
+
+        /** state is reset automatically after this test via #[After] */
+    }
+}
+```
+
 - **`EventDispatcherInterfaceMock`** -- Mocks `EventDispatcherInterface` with a `dispatch()` that returns the dispatched event.
 - **`SluggerInterfaceMock`** -- Mocks `SluggerInterface` with a `slug()` that returns a `UnicodeString` containing the input string.
 
