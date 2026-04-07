@@ -118,13 +118,13 @@ class MockContainer
             $mockedConstructorArguments = [];
 
             foreach ($mockDto->getConstruct() ?? [] as $dependency) {
-                if ($dependency instanceof MockDto) {
+                if (true === $dependency instanceof MockDto) {
                     $mockedConstructorArguments[] = $this->getOrCreateMock($dependency);
 
                     continue;
                 }
 
-                if ($dependency instanceof MockDtoInterface) {
+                if (true === $dependency instanceof MockDtoInterface) {
                     $mockedConstructorArguments[] = $this->getOrCreateMock($dependency::getMockDto());
 
                     continue;
