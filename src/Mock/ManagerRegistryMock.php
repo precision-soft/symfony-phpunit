@@ -24,6 +24,9 @@ use ReflectionClass;
 
 class ManagerRegistryMock implements MockDtoInterface
 {
+    /** @var array<string, true> */
+    private static array $managedEntityClasses = [];
+
     public static function getMockDto(): MockDto
     {
         return new MockDto(
@@ -34,6 +37,21 @@ class ManagerRegistryMock implements MockDtoInterface
         );
     }
 
+    /** @param list<class-string> $entityClasses */
+    public static function setManagedEntityClasses(array $entityClasses): void
+    {
+        self::$managedEntityClasses = [];
+
+        foreach ($entityClasses as $entityClass) {
+            self::$managedEntityClasses[$entityClass] = true;
+        }
+    }
+
+    public static function resetManagedEntityClasses(): void
+    {
+        self::$managedEntityClasses = [];
+    }
+
     public static function getOnCreate(): Closure
     {
         return static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
@@ -41,24 +59,37 @@ class ManagerRegistryMock implements MockDtoInterface
                 ->byDefault()
                 ->andReturn(self::getEntityManagerMock($mockContainer));
 
+            $entityManagerMock = self::getEntityManagerMock($mockContainer);
+
             $mockInterface->shouldReceive('getManagerForClass')
                 ->byDefault()
-                ->andReturn(self::getEntityManagerMock($mockContainer));
+                ->andReturnUsing(
+                    static function (string $className) use ($entityManagerMock): ?MockInterface {
+                        if (0 === \count(self::$managedEntityClasses)) {
+                            return $entityManagerMock;
+                        }
+
+                        if (true === isset(self::$managedEntityClasses[$className])) {
+                            return $entityManagerMock;
+                        }
+
+                        return null;
+                    },
+                );
         };
     }
 
     private static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
     {
-        if (true === $mockContainer->hasMock(EntityManagerInterface::class)) {
-            return $mockContainer->getMock(EntityManagerInterface::class);
-        }
+        /** @var array<string, MockInterface> $repositoryMocks */
+        $repositoryMocks = [];
 
-        $mockContainer->registerMockDto(
+        return $mockContainer->getOrRegisterMock(
             new MockDto(
                 EntityManagerInterface::class,
-                [],
+                null,
                 false,
-                static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                static function (MockInterface $mockInterface, MockContainer $innerMockContainer) use (&$repositoryMocks): void {
                     $mockInterface->shouldReceive('beginTransaction')
                         ->byDefault()
                         ->andReturnNull();
@@ -114,34 +145,39 @@ class ManagerRegistryMock implements MockDtoInterface
 
                     $mockInterface->shouldReceive('getClassMetadata')
                         ->byDefault()
-                        ->andReturn(self::getClassMetadataMock($mockContainer));
+                        ->andReturn(self::getClassMetadataMock($innerMockContainer));
 
                     $mockInterface->shouldReceive('getRepository')
                         ->byDefault()
-                        ->andReturn(Mockery::mock(EntityRepository::class));
+                        ->andReturnUsing(
+                            static function (string $entityName) use (&$repositoryMocks): MockInterface {
+                                if (true === isset($repositoryMocks[$entityName])) {
+                                    return $repositoryMocks[$entityName];
+                                }
+
+                                $repositoryMock = Mockery::mock(EntityRepository::class);
+                                $repositoryMocks[$entityName] = $repositoryMock;
+
+                                return $repositoryMock;
+                            },
+                        );
 
                     $mockInterface->shouldReceive('getConnection')
                         ->byDefault()
-                        ->andReturn(self::getConnectionMock($mockContainer));
+                        ->andReturn(self::getConnectionMock($innerMockContainer));
                 },
             ),
         );
-
-        return $mockContainer->getMock(EntityManagerInterface::class);
     }
 
     private static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
     {
-        if (true === $mockContainer->hasMock(ClassMetadata::class)) {
-            return $mockContainer->getMock(ClassMetadata::class);
-        }
-
-        $mockContainer->registerMockDto(
+        return $mockContainer->getOrRegisterMock(
             new MockDto(
                 ClassMetadata::class,
                 null,
                 false,
-                static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                static function (MockInterface $mockInterface, MockContainer $innerMockContainer): void {
                     $mockInterface->shouldReceive('setIdGeneratorType')
                         ->byDefault()
                         ->andReturnSelf();
@@ -152,29 +188,21 @@ class ManagerRegistryMock implements MockDtoInterface
                 },
             ),
         );
-
-        return $mockContainer->getMock(ClassMetadata::class);
     }
 
     private static function getConnectionMock(MockContainer $mockContainer): MockInterface
     {
-        if (true === $mockContainer->hasMock(Connection::class)) {
-            return $mockContainer->getMock(Connection::class);
-        }
-
-        $mockContainer->registerMockDto(
+        return $mockContainer->getOrRegisterMock(
             new MockDto(
                 Connection::class,
                 null,
                 true,
-                static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+                static function (MockInterface $mockInterface, MockContainer $innerMockContainer): void {
                     $mockInterface->shouldReceive('executeStatement')
                         ->byDefault()
                         ->andReturn(1);
                 },
             ),
         );
-
-        return $mockContainer->getMock(Connection::class);
     }
 }

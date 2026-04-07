@@ -11,6 +11,7 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\Mock;
 use ArrayObject;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Id\AbstractIdGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
@@ -36,6 +37,7 @@ final class ManagerRegistryMockTest extends TestCase
     {
         parent::setUp();
 
+        ManagerRegistryMock::resetManagedEntityClasses();
         $this->mockContainer = new MockContainer();
         $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
     }
@@ -43,6 +45,7 @@ final class ManagerRegistryMockTest extends TestCase
     protected function tearDown(): void
     {
         $this->mockContainer->close();
+        ManagerRegistryMock::resetManagedEntityClasses();
 
         parent::tearDown();
     }
@@ -273,5 +276,66 @@ final class ManagerRegistryMockTest extends TestCase
         $this->expectExceptionMessage('does not exist');
 
         $entityManager->getReference('NonExistentClass', 1);
+    }
+
+    public function testGetManagerForClassReturnsEntityManagerWhenNoManagedClassesConfigured(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        $entityManager = $registry->getManagerForClass(stdClass::class);
+
+        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+    }
+
+    public function testGetManagerForClassReturnsEntityManagerForManagedClass(): void
+    {
+        ManagerRegistryMock::setManagedEntityClasses([stdClass::class]);
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
+
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        $entityManager = $registry->getManagerForClass(stdClass::class);
+
+        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+    }
+
+    public function testGetManagerForClassReturnsNullForUnmanagedClass(): void
+    {
+        ManagerRegistryMock::setManagedEntityClasses([EntityWithSetId::class]);
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
+
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        $entityManager = $registry->getManagerForClass(stdClass::class);
+
+        static::assertNull($entityManager);
+    }
+
+    public function testGetRepositoryReturnsDifferentMocksForDifferentEntityClasses(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $stdClassRepository = $entityManager->getRepository(stdClass::class);
+        $entityWithSetIdRepository = $entityManager->getRepository(EntityWithSetId::class);
+
+        static::assertInstanceOf(EntityRepository::class, $stdClassRepository);
+        static::assertInstanceOf(EntityRepository::class, $entityWithSetIdRepository);
+        static::assertNotSame($stdClassRepository, $entityWithSetIdRepository);
+    }
+
+    public function testGetRepositoryReturnsSameMockForSameEntityClass(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $firstRepository = $entityManager->getRepository(stdClass::class);
+        $secondRepository = $entityManager->getRepository(stdClass::class);
+
+        static::assertSame($firstRepository, $secondRepository);
     }
 }

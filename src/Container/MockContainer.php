@@ -71,6 +71,17 @@ class MockContainer
         return $this;
     }
 
+    public function getOrRegisterMock(MockDto $mockDto): MockInterface
+    {
+        if (true === $this->hasMock($mockDto->getClass())) {
+            return $this->getMock($mockDto->getClass());
+        }
+
+        $this->registerMockDto($mockDto);
+
+        return $this->getMock($mockDto->getClass());
+    }
+
     /** @param class-string $class */
     public function hasMock(string $class): bool
     {
@@ -149,6 +160,7 @@ class MockContainer
                 }
             } catch (Throwable $throwable) {
                 unset($this->mocks[$mockDto->getClass()]);
+                unset($this->mockDtos[$mockDto->getClass()]);
 
                 throw $throwable;
             }

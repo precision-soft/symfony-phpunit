@@ -247,7 +247,8 @@ final class MockContainerEdgeCaseTest extends TestCase
             static::assertSame('onCreate failure', $exception->getMessage());
         }
 
-        /** @info Second call succeeds — mock was cleaned from registry, so createMock runs again */
+        /** @info Re-register and retry — both mock and mockDto were cleaned on failure */
+        $this->mockContainer->registerMockDto($mockDto);
         $mockInterface = $this->mockContainer->getMock(SecondMockDto::class);
 
         static::assertInstanceOf(MockInterface::class, $mockInterface);
