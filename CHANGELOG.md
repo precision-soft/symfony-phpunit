@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.0] - 2026-04-07
+
+### Added
+
+- `MockContainer::getOrRegisterMock()` — register and retrieve a mock in one call; returns the existing mock if already registered
+- `ManagerRegistryMock::setManagedEntityClasses()` — restrict which entity classes are considered managed; `getManagerForClass()` returns `null` for classes outside the list
+- `ManagerRegistryMock::resetManagedEntityClasses()` — clear the managed entity classes list
+- `ManagerRegistryMockTrait` — opt-in PHPUnit trait with `#[After]` hook that resets `ManagerRegistryMock` static state automatically after each test
+
+### Fixed
+
+- `MockContainer::createMock()` — on `onCreate` failure, also remove the registered `MockDto` (previously only the mock instance was removed, leaving a stale DTO)
+- `ManagerRegistryMock::getRepository()` — return the same mock for repeated calls with the same entity class (previously returned a new mock each time)
+- `composer.json install-hooks` — add `${COMPOSER_DEV_MODE:-0}` default to prevent silent failure when the variable is unset
+
+### Changed
+
+- `ManagerRegistryMock::getManagerForClass()` — returns `null` for classes not in the managed list when `setManagedEntityClasses()` has been configured (previously always returned the entity manager regardless)
+
 ## [v3.0.1] - 2026-04-05
 
 ### Added
@@ -245,6 +264,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v3.1.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.0.1...v3.1.0
+
+[v3.0.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.0.0...v3.0.1
 
 [v3.0.0]: https://github.com/precision-soft/symfony-phpunit/compare/v2.1.3...v3.0.0
 
