@@ -38,9 +38,7 @@ trait MockContainerTrait
 
     protected function registerMockDto(MockDto $mockDto): self
     {
-        $this->mockContainer ??= new MockContainer();
-
-        $this->mockContainer->registerMockDto($mockDto);
+        $this->initializeMockContainer()->registerMockDto($mockDto);
 
         return $this;
     }
@@ -48,11 +46,14 @@ trait MockContainerTrait
     /** @param class-string $class */
     protected function registerMock(string $class, MockInterface $mockInterface): self
     {
-        $this->mockContainer ??= new MockContainer();
-
-        $this->mockContainer->registerMock($class, $mockInterface);
+        $this->initializeMockContainer()->registerMock($class, $mockInterface);
 
         return $this;
+    }
+
+    private function initializeMockContainer(): MockContainer
+    {
+        return $this->mockContainer ??= new MockContainer();
     }
 
     protected function setUp(): void

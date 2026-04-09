@@ -55,11 +55,11 @@ class ManagerRegistryMock implements MockDtoInterface
     public static function getOnCreate(): Closure
     {
         return static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
+            $entityManagerMock = self::getEntityManagerMock($mockContainer);
+
             $mockInterface->shouldReceive('getManager')
                 ->byDefault()
-                ->andReturn(self::getEntityManagerMock($mockContainer));
-
-            $entityManagerMock = self::getEntityManagerMock($mockContainer);
+                ->andReturn($entityManagerMock);
 
             $mockInterface->shouldReceive('getManagerForClass')
                 ->byDefault()
