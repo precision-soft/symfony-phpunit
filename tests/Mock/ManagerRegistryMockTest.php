@@ -291,6 +291,7 @@ final class ManagerRegistryMockTest extends TestCase
     {
         ManagerRegistryMock::setManagedEntityClasses([stdClass::class]);
 
+        $this->mockContainer->close();
         $this->mockContainer = new MockContainer();
         $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
 
@@ -305,6 +306,7 @@ final class ManagerRegistryMockTest extends TestCase
     {
         ManagerRegistryMock::setManagedEntityClasses([EntityWithSetId::class]);
 
+        $this->mockContainer->close();
         $this->mockContainer = new MockContainer();
         $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
 
