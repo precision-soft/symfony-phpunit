@@ -9,9 +9,7 @@ create_env() {
         touch ${DOCKER_PATH}.env.local
     fi
 
-    if [[ ! -L .git/hooks ]]; then
-        rm -rf .git/hooks && ln -s ../.dev/git-hooks .git/hooks
-    fi
+    rm -rf .git/hooks && ln -s ../.dev/git-hooks .git/hooks
 }
 
 create_env

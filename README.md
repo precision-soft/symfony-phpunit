@@ -430,20 +430,11 @@ All exceptions are in the `PrecisionSoft\Symfony\Phpunit\Exception` namespace:
 
 ## Dev
 
+The development environment uses Docker. The `./dc` script is a Docker Compose wrapper located in `.dev/`.
+
 ```shell
 git clone git@github.com:precision-soft/symfony-phpunit.git
-cd symfony-phpunit/.dev/docker
+cd symfony-phpunit
 
-USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -d --build
-docker compose exec dev bash
-```
-
-Inside the container:
-
-```shell
-composer install     # install dependencies
-punit                # run tests
-pfix                 # auto-format
-pstan                # static analysis
-full                 # all of the above
+./dc build && ./dc up -d
 ```
