@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.1] - 2026-04-10
+
+### Fixed
+
+- `MockContainer::getOrCreateMock()` — also check `$this->mockDtos` during mock lookup to prevent double instantiation when a DTO is registered but the mock has not yet been created
+- `ManagerRegistryMock::getOnCreate()` — call `getEntityManagerMock()` once before `shouldReceive()` to avoid a redundant second call
+- `ManagerRegistryMock::getOnCreate()` — use `static::` instead of `self::` for late static binding when calling `getEntityManagerMock()`
+- `ManagerRegistryMock::getClassMetadataMock()` — drop unused `$innerMockContainer` parameter from the `ClassMetadata` closure
+- `MockContainerTrait` — extract `initializeMockContainer()` to remove duplicated `??= new MockContainer()` from `registerMockDto()` and `registerMock()`
+
 ## [v3.1.0] - 2026-04-07
 
 ### Added
@@ -264,6 +274,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v3.1.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.1.0...v3.1.1
 
 [v3.1.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.0.1...v3.1.0
 
