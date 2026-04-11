@@ -25,7 +25,7 @@ use ReflectionClass;
 class ManagerRegistryMock implements MockDtoInterface
 {
     /** @var array<string, true> */
-    private static array $managedEntityClasses = [];
+    protected static array $managedEntityClasses = [];
 
     public static function getMockDto(): MockDto
     {
@@ -55,7 +55,7 @@ class ManagerRegistryMock implements MockDtoInterface
     public static function getOnCreate(): Closure
     {
         return static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
-            $entityManagerMock = static::getEntityManagerMock($mockContainer);
+            $entityManagerMock = self::getEntityManagerMock($mockContainer);
 
             $mockInterface->shouldReceive('getManager')
                 ->byDefault()
@@ -79,7 +79,7 @@ class ManagerRegistryMock implements MockDtoInterface
         };
     }
 
-    private static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
+    protected static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
     {
         $repositoryMocks = [];
 
@@ -169,7 +169,7 @@ class ManagerRegistryMock implements MockDtoInterface
         );
     }
 
-    private static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
+    protected static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
     {
         return $mockContainer->getOrRegisterMock(
             new MockDto(
@@ -189,7 +189,7 @@ class ManagerRegistryMock implements MockDtoInterface
         );
     }
 
-    private static function getConnectionMock(MockContainer $mockContainer): MockInterface
+    protected static function getConnectionMock(MockContainer $mockContainer): MockInterface
     {
         return $mockContainer->getOrRegisterMock(
             new MockDto(
