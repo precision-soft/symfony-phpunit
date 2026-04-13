@@ -20,11 +20,11 @@ use Throwable;
 class MockContainer
 {
     /** @var array<string, MockDto> */
-    private array $mockDtos = [];
+    protected array $mockDtos = [];
     /** @var array<string, MockInterface> */
-    private array $mocks = [];
+    protected array $mocks = [];
     /** @var array<string, true> */
-    private array $creating = [];
+    protected array $creating = [];
 
     public function registerMockDto(MockDto $mockDto): self
     {
@@ -95,7 +95,7 @@ class MockContainer
         $this->creating = [];
     }
 
-    private function getOrCreateMock(MockDto $mockDto): MockInterface
+    protected function getOrCreateMock(MockDto $mockDto): MockInterface
     {
         if (true === isset($this->mocks[$mockDto->getClass()]) || true === isset($this->mockDtos[$mockDto->getClass()])) {
             return $this->getMock($mockDto->getClass());
@@ -104,7 +104,7 @@ class MockContainer
         return $this->createMock($mockDto);
     }
 
-    private function createMock(MockDto $mockDto): MockInterface
+    protected function createMock(MockDto $mockDto): MockInterface
     {
         if (true === isset($this->creating[$mockDto->getClass()])) {
             throw new CircularDependencyException(

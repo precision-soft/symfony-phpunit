@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.2.0] - 2026-04-12
+
 ### Changed
 
-- `ManagerRegistryMock::getEntityManagerMock()` — change visibility from `private` to `protected` to allow override in subclasses
-- `ManagerRegistryMock::getClassMetadataMock()` — change visibility from `private` to `protected` to allow override in subclasses
-- `ManagerRegistryMock::getConnectionMock()` — change visibility from `private` to `protected` to allow override in subclasses
+- `ManagerRegistryMock` — `getEntityManagerMock()`, `getClassMetadataMock()`, `getConnectionMock()` visibility widened from `private` to `protected`
+- `MockContainer` — `getOrCreateMock()`, `createMock()` visibility widened from `private` to `protected`; `$mockDtos`, `$mocks`, `$creating` properties from `private` to `protected`
+- `MockContainerTrait` — `$mockContainer` property and `initializeMockContainer()` visibility widened from `private` to `protected`
+- `MockDto` — constructor-promoted properties `$class`, `$construct`, `$partial`, `$onCreate` widened from `private readonly` to `protected readonly`
 
 ## [v3.1.1] - 2026-04-10
 
@@ -282,6 +285,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[v3.2.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.1.1...v3.2.0
 
 [v3.1.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.1.0...v3.1.1
 

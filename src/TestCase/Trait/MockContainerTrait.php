@@ -18,7 +18,7 @@ trait MockContainerTrait
 {
     use MockeryPHPUnitIntegration;
 
-    private ?MockContainer $mockContainer = null;
+    protected ?MockContainer $mockContainer = null;
 
     /**
      * @template T of object
@@ -51,7 +51,7 @@ trait MockContainerTrait
         return $this;
     }
 
-    private function initializeMockContainer(): MockContainer
+    protected function initializeMockContainer(): MockContainer
     {
         return $this->mockContainer ??= new MockContainer();
     }

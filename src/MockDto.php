@@ -18,10 +18,10 @@ class MockDto
      * @param list<MockDto|MockDtoInterface|class-string<MockDtoInterface>|scalar>|null $construct
      */
     public function __construct(
-        private readonly string $class,
-        private readonly ?array $construct = null,
-        private readonly bool $partial = false,
-        private readonly ?Closure $onCreate = null,
+        protected readonly string $class,
+        protected readonly ?array $construct = null,
+        protected readonly bool $partial = false,
+        protected readonly ?Closure $onCreate = null,
     ) {}
 
     /** @return class-string */
