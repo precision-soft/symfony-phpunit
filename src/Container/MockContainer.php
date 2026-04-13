@@ -97,7 +97,7 @@ class MockContainer
 
     protected function getOrCreateMock(MockDto $mockDto): MockInterface
     {
-        if (true === isset($this->mocks[$mockDto->getClass()]) || true === isset($this->mockDtos[$mockDto->getClass()])) {
+        if (true === isset($this->mocks[$mockDto->getClass()])) {
             return $this->getMock($mockDto->getClass());
         }
 

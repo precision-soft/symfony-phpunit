@@ -20,6 +20,8 @@ trait MockContainerTrait
 
     protected ?MockContainer $mockContainer = null;
 
+    abstract public static function getMockDto(): MockDto;
+
     /**
      * @template T of object
      * @param class-string<T> $class
