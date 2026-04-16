@@ -15,7 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Id\AbstractIdGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\Persistence\ManagerRegistry;
@@ -41,7 +43,6 @@ final class ManagerRegistryMockTest extends TestCase
     {
         parent::setUp();
 
-        ManagerRegistryMock::resetManagedEntityClasses();
         $this->mockContainer = new MockContainer();
         $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
     }
@@ -49,7 +50,6 @@ final class ManagerRegistryMockTest extends TestCase
     protected function tearDown(): void
     {
         $this->mockContainer->close();
-        ManagerRegistryMock::resetManagedEntityClasses();
 
         parent::tearDown();
     }
@@ -88,72 +88,112 @@ final class ManagerRegistryMockTest extends TestCase
 
     public function testEntityManagerPersistIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->persist(new stdClass());
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('persist')->once();
     }
 
     public function testEntityManagerRemoveIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->remove(new stdClass());
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('remove')->once();
     }
 
     public function testEntityManagerFlushIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->flush();
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('flush')->once();
     }
 
     public function testEntityManagerBeginTransactionIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->beginTransaction();
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('beginTransaction')->once();
     }
 
     public function testEntityManagerCommitIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->commit();
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('commit')->once();
     }
 
     public function testEntityManagerRollbackIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->rollback();
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('rollback')->once();
     }
 
     public function testEntityManagerClearIsCallable(): void
     {
-        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
-        $entityManager = $registry->getManager();
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
 
         $entityManager->clear();
 
-        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->shouldHaveReceived('clear')->once();
+    }
+
+    public function testEntityManagerDetachIsCallable(): void
+    {
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
+
+        $entityManager->detach(new stdClass());
+
+        $entityManager->shouldHaveReceived('detach')->once();
+    }
+
+    public function testEntityManagerRefreshIsCallable(): void
+    {
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
+
+        $entityManager->refresh(new stdClass());
+
+        $entityManager->shouldHaveReceived('refresh')->once();
+    }
+
+    public function testEntityManagerCloseIsCallable(): void
+    {
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
+
+        $entityManager->close();
+
+        $entityManager->shouldHaveReceived('close')->once();
+    }
+
+    public function testEntityManagerLockIsCallable(): void
+    {
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
+
+        $entityManager->lock(new stdClass(), 1);
+
+        $entityManager->shouldHaveReceived('lock')->once();
     }
 
     public function testEntityManagerGetClassMetadataReturnsOrmClassMetadata(): void
@@ -303,13 +343,8 @@ final class ManagerRegistryMockTest extends TestCase
 
     public function testGetManagerForClassReturnsEntityManagerForManagedClass(): void
     {
-        ManagerRegistryMock::setManagedEntityClasses([stdClass::class]);
-
-        $this->mockContainer->close();
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
-
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [stdClass::class]);
 
         $entityManager = $registry->getManagerForClass(stdClass::class);
 
@@ -318,13 +353,8 @@ final class ManagerRegistryMockTest extends TestCase
 
     public function testGetManagerForClassReturnsNullForUnmanagedClass(): void
     {
-        ManagerRegistryMock::setManagedEntityClasses([EntityWithSetId::class]);
-
-        $this->mockContainer->close();
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
-
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [EntityWithSetId::class]);
 
         $entityManager = $registry->getManagerForClass(stdClass::class);
 
@@ -493,5 +523,21 @@ final class ManagerRegistryMockTest extends TestCase
         $entityManager = $registry->getManager();
 
         static::assertInstanceOf(Configuration::class, $entityManager->getConfiguration());
+    }
+
+    public function testEntityManagerCreateNativeQueryReturnsNativeQueryMock(): void
+    {
+        $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $this->mockContainer->getMock(EntityManagerInterface::class);
+        $resultSetMapping = Mockery::mock(ResultSetMapping::class);
+
+        static::assertInstanceOf(NativeQuery::class, $entityManager->createNativeQuery('SELECT 1', $resultSetMapping));
+    }
+
+    public function testGetConnectionReturnsConnection(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        static::assertInstanceOf(Connection::class, $registry->getConnection());
     }
 }

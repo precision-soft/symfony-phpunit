@@ -60,7 +60,7 @@ trait MockContainerTrait
     {
         parent::setUp();
 
-        /** @phpstan-ignore function.alreadyNarrowedType */
+        /** @phpstan-ignore function.alreadyNarrowedType (trait may be used without MockDtoInterface; PHPStan sees always-true only via AbstractTestCase) */
         if (true === \method_exists(static::class, 'getMockDto')) {
             $this->registerMockDto(static::getMockDto());
 

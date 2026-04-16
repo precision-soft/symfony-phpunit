@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.3.1] - 2026-04-16
+
+### Fixed
+
+- `MockContainer::registerMockDto()` now throws `MockAlreadyRegisteredException` when a mock instance is already registered for the class — previously a ghost DTO was silently created alongside the existing mock
+- `ManagerRegistryMock::getOnCreate()` — `self::$managedEntityClasses` replaced with `static::$managedEntityClasses` inside the `getManagerForClass` closure so subclasses that override the property are respected
+- Redundant `unset($this->mockDtos[...])` removed from `MockContainer::createMock()` catch block — `registerMock()` already clears the DTO on the happy path
+
+### Changed
+
+- `SluggerInterfaceMock::getOnCreate()` and `EventDispatcherInterfaceMock::getOnCreate()` — unused `MockContainer` closure parameter removed
+- `ManagerRegistryMock::getConnectionMock()` — unused `MockContainer` closure parameter removed
+- `MockContainerTrait::setUp()` — `@phpstan-ignore` reformatted with explanatory reason per PHPStan 2.x syntax
+- `ManagerRegistryMockTest` — deprecated `setManagedEntityClasses()` tests replaced with `configureManagedEntityClasses()`; void-method smoke tests now use `shouldHaveReceived()->once()` for meaningful assertions
+- README — Limitations section expanded with `getReference()` `setId()` convention, `ClassMetadata` single-instance behavior, `resetManager()` contract divergence, and `SluggerInterfaceMock` no-transformation behavior
+
+### Added
+
+- `ManagerRegistryMock` — `getConnection()` (from `ConnectionRegistry`) now stubbed on the registry mock, returning the managed `Connection` mock
+- Tests for previously uncovered EntityManager methods: `detach()`, `refresh()`, `close()`, `lock()`, `createNativeQuery()`
+- Test for `MockContainer::registerMockDto()` throwing when a mock instance is already registered
+
+### Deprecated
+
+- `ManagerRegistryMockTrait` — added `@deprecated since 3.3.0` annotation; will be removed in 4.0.0 together with `ManagerRegistryMock::resetManagedEntityClasses()`
+
 ## [v3.3.0] - 2026-04-16
 
 ### Fixed
@@ -320,7 +346,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.1...HEAD
+
+[v3.3.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.0...v3.3.1
 
 [v3.3.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.2.1...v3.3.0
 

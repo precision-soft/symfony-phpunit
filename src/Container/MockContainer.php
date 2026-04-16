@@ -40,6 +40,12 @@ class MockContainer
             );
         }
 
+        if (true === isset($this->mocks[$mockDto->getClass()])) {
+            throw new MockAlreadyRegisteredException(
+                \sprintf('mock already registered for class `%s`', $mockDto->getClass()),
+            );
+        }
+
         $this->mockDtos[$mockDto->getClass()] = $mockDto;
 
         return $this;
@@ -185,7 +191,6 @@ class MockContainer
                 }
             } catch (Throwable $throwable) {
                 unset($this->mocks[$mockDto->getClass()]);
-                unset($this->mockDtos[$mockDto->getClass()]);
 
                 throw $throwable;
             }

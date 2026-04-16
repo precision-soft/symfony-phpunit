@@ -74,6 +74,17 @@ final class MockContainerEdgeCaseTest extends TestCase
         $this->mockContainer->registerMock(SecondMockDto::class, $mockInterface);
     }
 
+    public function testRegisterMockDtoThrowsExceptionWhenMockAlreadyRegistered(): void
+    {
+        $externalMockInterface = Mockery::mock(SecondMockDto::class);
+        $this->mockContainer->registerMock(SecondMockDto::class, $externalMockInterface);
+
+        $this->expectException(MockAlreadyRegisteredException::class);
+        $this->expectExceptionMessage(\sprintf('mock already registered for class `%s`', SecondMockDto::class));
+
+        $this->mockContainer->registerMockDto(new MockDto(SecondMockDto::class));
+    }
+
     public function testRegisterMockDirectlyAndRetrieve(): void
     {
         $externalMockInterface = Mockery::mock(SecondMockDto::class);

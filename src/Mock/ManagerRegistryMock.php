@@ -112,11 +112,11 @@ class ManagerRegistryMock implements MockDtoInterface
                 ->byDefault()
                 ->andReturnUsing(
                     static function (string $className) use ($entityManagerMock): ?MockInterface {
-                        if (0 === \count(self::$managedEntityClasses)) {
+                        if (0 === \count(static::$managedEntityClasses)) {
                             return $entityManagerMock;
                         }
 
-                        if (true === isset(self::$managedEntityClasses[$className])) {
+                        if (true === isset(static::$managedEntityClasses[$className])) {
                             return $entityManagerMock;
                         }
 
@@ -151,6 +151,10 @@ class ManagerRegistryMock implements MockDtoInterface
             $mockInterface->shouldReceive('getConnectionNames')
                 ->byDefault()
                 ->andReturn(['default' => 'doctrine.dbal.default_connection']);
+
+            $mockInterface->shouldReceive('getConnection')
+                ->byDefault()
+                ->andReturn($connectionMock);
         };
     }
 
@@ -334,7 +338,7 @@ class ManagerRegistryMock implements MockDtoInterface
                 Connection::class,
                 null,
                 false,
-                static function (MockInterface $mockInterface, MockContainer $innerMockContainer): void {
+                static function (MockInterface $mockInterface): void {
                     $mockInterface->shouldReceive('executeStatement')
                         ->byDefault()
                         ->andReturn(1);

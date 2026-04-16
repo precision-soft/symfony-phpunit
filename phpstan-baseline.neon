@@ -25,18 +25,6 @@ parameters:
 			path: tests/Mock/ManagerRegistryMockTest.php
 
 		-
-			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:beginTransaction\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: tests/Mock/ManagerRegistryMockTest.php
-
-		-
-			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:commit\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: tests/Mock/ManagerRegistryMockTest.php
-
-		-
 			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:getConnection\(\)\.$#'
 			identifier: method.notFound
 			count: 2
@@ -46,12 +34,6 @@ parameters:
 			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:getReference\(\)\.$#'
 			identifier: method.notFound
 			count: 6
-			path: tests/Mock/ManagerRegistryMockTest.php
-
-		-
-			message: '#^Call to an undefined method Doctrine\\Persistence\\ObjectManager\:\:rollback\(\)\.$#'
-			identifier: method.notFound
-			count: 1
 			path: tests/Mock/ManagerRegistryMockTest.php
 
 		-
