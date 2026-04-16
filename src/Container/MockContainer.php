@@ -26,6 +26,12 @@ class MockContainer
     /** @var array<string, true> */
     protected array $creating = [];
 
+    /**
+     * Registers a MockDto configuration for deferred mock creation. The mock is created lazily on first call to
+     * getMock(). Throws MockAlreadyRegisteredException if a DTO for the same class was already registered.
+     *
+     * @throws MockAlreadyRegisteredException
+     */
     public function registerMockDto(MockDto $mockDto): self
     {
         if (true === isset($this->mockDtos[$mockDto->getClass()])) {
@@ -40,9 +46,14 @@ class MockContainer
     }
 
     /**
+     * Returns the mock for the given class, creating it lazily from its registered MockDto if not yet instantiated.
+     * Throws MockNotFoundException if no MockDto has been registered for the class.
+     *
      * @template T of object
      * @param class-string<T> $class
      * @return MockInterface&T
+     * @throws MockNotFoundException
+     * @throws CircularDependencyException
      */
     public function getMock(string $class): MockInterface
     {
@@ -57,7 +68,10 @@ class MockContainer
         return $this->mocks[$class];
     }
 
-    /** @param class-string $class */
+    /**
+     * @param class-string $class
+     * @throws MockAlreadyRegisteredException
+     */
     public function registerMock(string $class, MockInterface $mockInterface): self
     {
         if (true === isset($this->mocks[$class])) {
@@ -67,10 +81,15 @@ class MockContainer
         }
 
         $this->mocks[$class] = $mockInterface;
+        unset($this->mockDtos[$class]);
 
         return $this;
     }
 
+    /**
+     * Returns an existing mock for the class described by the DTO, or registers the DTO and creates the mock if none
+     * exists yet. The DTO itself validates that the class/interface exists at construction time.
+     */
     public function getOrRegisterMock(MockDto $mockDto): MockInterface
     {
         if (true === $this->hasMock($mockDto->getClass())) {
@@ -93,12 +112,18 @@ class MockContainer
         $this->mockDtos = [];
         $this->mocks = [];
         $this->creating = [];
+
+        Mockery::close();
     }
 
+    /**
+     * Creates or returns an existing mock for the given class. Override in subclasses to customize mock creation
+     * logic for sub-dependencies. Called internally by createMock() when resolving MockDto constructor arguments.
+     */
     protected function getOrCreateMock(MockDto $mockDto): MockInterface
     {
         if (true === isset($this->mocks[$mockDto->getClass()])) {
-            return $this->getMock($mockDto->getClass());
+            return $this->mocks[$mockDto->getClass()];
         }
 
         return $this->createMock($mockDto);

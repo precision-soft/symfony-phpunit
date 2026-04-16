@@ -351,25 +351,24 @@ Each built-in mock requires additional packages — install them as needed:
 | `SluggerInterfaceMock`         | `symfony/string`                                            |
 | `EventDispatcherInterfaceMock` | `symfony/event-dispatcher-contracts` (included via Symfony) |
 
-- **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`. When calling `setManagedEntityClasses()` in a test, include `ManagerRegistryMockTrait` in your test class to automatically reset the static state after each test:
+- **`ManagerRegistryMock`** -- Mocks `ManagerRegistry` with a full `EntityManagerInterface` (persist, flush, commit, rollback, getReference, etc.), `ClassMetadata`, and `Connection`. To restrict which entity classes resolve to an entity manager via `getManagerForClass()`, use `configureManagedEntityClasses()` on the mock instance — configuration is per-mock with no static state:
 
 ```php
-use PrecisionSoft\Symfony\Phpunit\TestCase\Trait\ManagerRegistryMockTrait;
-
 final class CreateServiceTest extends AbstractTestCase
 {
-    use ManagerRegistryMockTrait;
-
     public static function getMockDto(): MockDto { ... }
 
     public function testCreate(): void
     {
-        ManagerRegistryMock::setManagedEntityClasses([Customer::class]);
+        $registry = $this->getMock(ManagerRegistry::class);
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [Customer::class]);
 
-        /** state is reset automatically after this test via #[After] */
+        /** no reset needed — state lives on the mock, not the class */
     }
 }
 ```
+
+> The static `setManagedEntityClasses()` / `resetManagedEntityClasses()` helpers (and `ManagerRegistryMockTrait`'s `#[After]` hook) remain available for backward compatibility but are deprecated since 3.3.0 and will be removed in 4.0.0.
 
 - **`EventDispatcherInterfaceMock`** -- Mocks `EventDispatcherInterface` with a `dispatch()` that returns the dispatched event.
 - **`SluggerInterfaceMock`** -- Mocks `SluggerInterface` with a `slug()` that returns a `UnicodeString` containing the input string.
@@ -420,13 +419,22 @@ public function testFoo(): void
 
 All exceptions are in the `PrecisionSoft\Symfony\Phpunit\Exception` namespace:
 
-| Exception                              | Thrown when                                            |
-|----------------------------------------|--------------------------------------------------------|
-| `CircularDependencyException`          | Circular dependency detected during mock creation      |
-| `ClassNotFoundException`               | `getReference()` is called with a non-existent class   |
-| `MockAlreadyRegisteredException`       | A mock or `MockDto` is registered twice for same class |
-| `MockNotFoundException`                | `getMock()` is called for an unregistered class        |
-| `MockContainerNotInitializedException` | `MockContainer` is accessed before initialization      |
+| Exception                              | Thrown when                                                                                                                                                                         |
+|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CircularDependencyException`          | `MockContainer::createMock()` detects that a mock's constructor dependency graph contains a cycle (class A depends on B which depends back on A).                                   |
+| `ClassNotFoundException`               | `MockContainer::getOrRegisterMock()` is called with a `MockDto` whose class string does not exist, or `EntityManagerInterface::getReference()` is called with a non-existent class. |
+| `MockAlreadyRegisteredException`       | `MockContainer::registerMockDto()` or `MockContainer::registerMock()` is called for a class that already has a registered DTO or mock instance.                                     |
+| `MockNotFoundException`                | `MockContainer::getMock()` is called for a class that has no registered `MockDto`.                                                                                                  |
+| `MockContainerNotInitializedException` | A `MockContainerTrait` method (e.g. `get()`) is called before `setUp()` has initialised the container.                                                                              |
+
+## Limitations
+
+- **`ManagerRegistryMock`** — default stubs cover the methods declared on `ManagerRegistry` and the commonly-used subset of `EntityManagerInterface` (persist/remove/flush/find/contains/lock/wrapInTransaction/createQuery/etc.). `Query`, `QueryBuilder`, `NativeQuery`, `UnitOfWork`, `Configuration` return bare Mockery stubs — tests that need concrete behavior must set expectations on them explicitly.
+- **`Connection`** is mocked as a non-partial mock; only `executeStatement` has a default expectation. Any other method must be stubbed per test.
+- **`ClassMetadata`** stubs only `setIdGeneratorType` and `setIdGenerator` (both as `null` returns, matching Doctrine's `void`). All other methods require explicit expectations.
+- **Repositories** — `EntityManagerInterface::getRepository($entityName)` returns a per-entity Mockery mock cached for the lifetime of the `MockContainer`. Expectations set on one retrieval are seen on subsequent retrievals of the same entity.
+- **`MockDto::$partial`** — uses Mockery's `makePartial()`, which bypasses the real constructor. For classes with required constructor state that backs real fall-through methods, pass `construct` with valid arguments instead of relying on partial mode.
+- **Parallel in-process execution** — the deprecated `ManagerRegistryMock::setManagedEntityClasses()` holds static state; use `configureManagedEntityClasses()` for per-mock scoping. All other state lives on `MockContainer` instances.
 
 ## Dev
 

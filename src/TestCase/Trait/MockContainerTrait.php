@@ -20,8 +20,6 @@ trait MockContainerTrait
 
     protected ?MockContainer $mockContainer = null;
 
-    abstract public static function getMockDto(): MockDto;
-
     /**
      * @template T of object
      * @param class-string<T> $class
@@ -62,7 +60,14 @@ trait MockContainerTrait
     {
         parent::setUp();
 
-        $this->registerMockDto(static::getMockDto());
+        /** @phpstan-ignore function.alreadyNarrowedType */
+        if (true === \method_exists(static::class, 'getMockDto')) {
+            $this->registerMockDto(static::getMockDto());
+
+            return;
+        }
+
+        $this->initializeMockContainer();
     }
 
     protected function tearDown(): void

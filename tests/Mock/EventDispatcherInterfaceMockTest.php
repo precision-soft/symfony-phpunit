@@ -83,4 +83,14 @@ final class EventDispatcherInterfaceMockTest extends TestCase
 
         static::assertSame($event, $result);
     }
+
+    public function testDispatchAcceptsOptionalEventName(): void
+    {
+        $mockInterface = $this->mockContainer->getMock(EventDispatcherInterface::class);
+
+        $event = new stdClass();
+        $result = $mockInterface->dispatch($event, 'custom.event.name');
+
+        static::assertSame($event, $result);
+    }
 }

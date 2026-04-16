@@ -22,11 +22,43 @@ class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return \sys_get_temp_dir() . '/symfony-phpunit-test/cache';
+        return self::getBaseTempDir() . '/cache';
     }
 
     public function getLogDir(): string
     {
-        return \sys_get_temp_dir() . '/symfony-phpunit-test/log';
+        return self::getBaseTempDir() . '/log';
+    }
+
+    public static function cleanupTempDirs(): void
+    {
+        $baseDir = self::getBaseTempDir();
+
+        if (false === \is_dir($baseDir)) {
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($baseDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
+
+        foreach ($iterator as $fileInfo) {
+            /** @var \SplFileInfo $fileInfo */
+            if (true === $fileInfo->isDir()) {
+                \rmdir($fileInfo->getPathname());
+
+                continue;
+            }
+
+            \unlink($fileInfo->getPathname());
+        }
+
+        \rmdir($baseDir);
+    }
+
+    private static function getBaseTempDir(): string
+    {
+        return \sys_get_temp_dir() . '/symfony-phpunit-test-' . \getmypid();
     }
 }

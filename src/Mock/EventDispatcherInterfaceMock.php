@@ -32,7 +32,7 @@ class EventDispatcherInterfaceMock implements MockDtoInterface
         return static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
             $mockInterface->shouldReceive('dispatch')
                 ->byDefault()
-                ->andReturnUsing(static function (object $event): object {
+                ->andReturnUsing(static function (object $event, ?string $eventName = null): object {
                     return $event;
                 });
         };

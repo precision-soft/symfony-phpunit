@@ -5,7 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v3.3.0] - 2026-04-16
+
+### Fixed
+
+- `ManagerRegistryMock::getReference()` return type widened from `object` to `?object` to match `EntityManagerInterface::getReference(): ?object` — previously tests could not exercise the null-handling path
+- `SluggerInterfaceMock::slug()` return type widened from `UnicodeString` to `AbstractUnicodeString` to match `SluggerInterface::slug(): AbstractUnicodeString`
+- `EventDispatcherInterfaceMock::dispatch()` default closure now accepts the optional `?string $eventName` parameter to match `EventDispatcherInterface::dispatch(object $event, ?string $eventName = null)`
+- `ManagerRegistryMock::getClassMetadataMock()` now registers the `ClassMetadata` mock through the container via `getOrRegisterMock()`, consistent with `getConnectionMock()` and the rest of the mock architecture
+- `MockDto` — PHPDoc for `$construct` parameter corrected (was `$constructorArguments`)
+
+### Changed
+
+- `ManagerRegistryMock` — internal method calls (`getOnCreate`, `getEntityManagerMock`, `getClassMetadataMock`, `getConnectionMock`) now use `static::` instead of `self::` so subclasses can override these extension points
+- `MockContainer::registerMock()` — now removes any previously registered `MockDto` for the same class, so the container never holds both a live mock and a stale DTO for the same class
+- `MockDto::__construct()` — now validates `$class` against `class_exists` / `interface_exists` and throws `ClassNotFoundException` eagerly, surfacing typos at DTO construction instead of deferring to `getMock()`
+- `MockContainer` — added PHPDoc blocks to `registerMockDto()`, `getMock()`, `getOrRegisterMock()`, and `getOrCreateMock()`
+- `phpunit.xml.dist` — enabled `executionOrder="random"`, `resolveDependencies="true"`, and `beStrictAboutOutputDuringTests="true"` to catch order-dependent tests and accidental output
+
+### Added
+
+- `ManagerRegistryMock::configureManagedEntityClasses(MockInterface $registryMock, array $entityClasses)` — per-mock alternative to `setManagedEntityClasses()` that holds no static state, safe under parallel in-process execution
+- `ManagerRegistryMock` default stubs for the previously unmocked `ManagerRegistry` methods: `getDefaultManagerName()`, `getManagers()`, `getManagerNames()`, `resetManager()`, `getDefaultConnectionName()`, `getConnections()`, `getConnectionNames()`
+- `ManagerRegistryMock` default stubs for the previously unmocked `EntityManagerInterface` methods: `find()`, `detach()`, `refresh()`, `contains()`, `close()`, `isOpen()`, `lock()`, `wrapInTransaction()`, `createQuery()`, `createQueryBuilder()`, `createNativeQuery()`, `getUnitOfWork()`, `getConfiguration()`. Query/QueryBuilder/NativeQuery/UnitOfWork/Configuration defaults return Mockery stubs that tests can override
+- `ClassMetadata` mock — `setIdGeneratorType` and `setIdGenerator` now default to `andReturnNull()` (matching the `void` return type in Doctrine), replacing the misleading `andReturnSelf()` that allowed invalid chaining
+- `Connection` mock is no longer a partial mock (`partial=true` → `partial=false`); real `Connection` internals are never exercised and all stubbed methods behave the same
+- `ClassMetadata` mock now receives a valid `$name` constructor argument (`stdClass::class`) instead of bypassing the required parameter
+- `MockContainer::getOrRegisterMock()` — removed the redundant `class_exists` / `interface_exists` check; `MockDto::__construct()` now guarantees validity upfront (see SP-106)
+- `MockContainer::getOrCreateMock()` — skip the extra `getMock()` indirection when the mock is already cached
+- `TestKernel` cache / log dirs are now scoped per-process (`/tmp/symfony-phpunit-test-<pid>/…`) and cleaned up on process shutdown via `register_shutdown_function`, preventing cross-process collisions and dangling temp files
+- `MockContainerTrait` no longer declares `abstract static function getMockDto()` — the constraint now lives only on `MockDtoInterface` (still enforced by `AbstractTestCase` / `AbstractKernelTestCase`). Consumers that use the trait directly may now skip the single-DTO contract; `setUp()` auto-registers only when `getMockDto()` is defined on the concrete class
+
+### Deprecated
+
+- `ManagerRegistryMock::setManagedEntityClasses()` / `resetManagedEntityClasses()` and `ManagerRegistryMockTrait` — use `configureManagedEntityClasses()` instead; will be removed in 4.0.0
 
 ## [v3.2.1] - 2026-04-13
 
@@ -118,9 +151,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove `final` from `MockContainer` and `MockDto` — allow library consumers to extend
 - Replace `\Throwable` FQN with `use Throwable` import in `MockContainer`
 - Guard pre-existing mock registration in `ManagerRegistryMock` — `getEntityManagerMock()`, `getClassMetadataMock()`, `getConnectionMock()` now skip registration when the mock already exists, preventing `MockAlreadyRegisteredException`
-
-### Removed
-
 - Remove stale `AUDIT_REPORT.md` (outdated v1.1.3 report)
 
 ## [v2.1.1] - 2026-03-30
@@ -159,9 +189,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `close()` method description in README — was incorrectly stating it calls `Mockery::close()`
 - Fix pre-commit hook: `php_cs_fixer()` now uses positional parameter instead of global variable, remove unused argument from `php_unit` call, and use `stop()` consistently for error handling
 - Guard git hooks relinking in `dc` script to avoid redundant `rm -rf && ln -s` on every invocation
-
-### Removed
-
 - Remove orphaned `phpcs.xml` config file — no `squizlabs/php_codesniffer` dependency exists
 
 ## [v2.0.3] - 2026-03-29
@@ -192,9 +219,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use static closures in all mock definitions where `$this` is not used
 - Expand PHPStan coverage and documentation
-
-### Removed
-
 - Remove unused dependency
 
 ## [v2.0.0] - 2026-03-27
@@ -295,6 +319,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AbstractTestCase` and `AbstractKernelTestCase` base test classes
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
+
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.0...HEAD
+
+[v3.3.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.2.1...v3.3.0
 
 [v3.2.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.2.0...v3.2.1
 

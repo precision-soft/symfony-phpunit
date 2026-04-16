@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace PrecisionSoft\Symfony\Phpunit\Test;
 
 use PHPUnit\Framework\TestCase;
+use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
 
@@ -73,5 +74,14 @@ final class MockDtoTest extends TestCase
         $mockDto = new MockDto(SecondMockDto::class, null, false, $closure);
 
         static::assertSame($closure, $mockDto->getOnCreate());
+    }
+
+    public function testConstructorRejectsNonExistentClass(): void
+    {
+        $this->expectException(ClassNotFoundException::class);
+        $this->expectExceptionMessage('class `PrecisionSoft\\Symfony\\Phpunit\\Test\\DoesNotExist` does not exist');
+
+        /** @phpstan-ignore-next-line */
+        new MockDto('PrecisionSoft\\Symfony\\Phpunit\\Test\\DoesNotExist');
     }
 }

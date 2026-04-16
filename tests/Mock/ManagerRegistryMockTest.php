@@ -10,10 +10,14 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\Mock;
 
 use ArrayObject;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Id\AbstractIdGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\UnitOfWork;
 use Doctrine\Persistence\ManagerRegistry;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -267,6 +271,16 @@ final class ManagerRegistryMockTest extends TestCase
         static::assertFalse(\method_exists($entity, 'setId'));
     }
 
+    public function testGetReferenceReturnsNullForNullId(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $entity = $entityManager->getReference(stdClass::class, null);
+
+        static::assertNull($entity);
+    }
+
     public function testGetReferenceWithNonexistentClassThrows(): void
     {
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
@@ -317,6 +331,26 @@ final class ManagerRegistryMockTest extends TestCase
         static::assertNull($entityManager);
     }
 
+    public function testConfigureManagedEntityClassesReturnsEntityManagerForManagedClass(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [stdClass::class]);
+
+        $entityManager = $registry->getManagerForClass(stdClass::class);
+
+        static::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+    }
+
+    public function testConfigureManagedEntityClassesReturnsNullForUnmanagedClass(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [EntityWithSetId::class]);
+
+        $entityManager = $registry->getManagerForClass(stdClass::class);
+
+        static::assertNull($entityManager);
+    }
+
     public function testGetRepositoryReturnsDifferentMocksForDifferentEntityClasses(): void
     {
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
@@ -339,5 +373,125 @@ final class ManagerRegistryMockTest extends TestCase
         $secondRepository = $entityManager->getRepository(stdClass::class);
 
         static::assertSame($firstRepository, $secondRepository);
+    }
+
+    public function testGetDefaultManagerNameReturnsDefault(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        static::assertSame('default', $registry->getDefaultManagerName());
+    }
+
+    public function testGetManagersReturnsDefaultManagerKeyed(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $managers = $registry->getManagers();
+
+        static::assertArrayHasKey('default', $managers);
+        static::assertSame($registry->getManager(), $managers['default']);
+    }
+
+    public function testGetManagerNamesReturnsDefaultServiceMapping(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        static::assertSame(['default' => 'doctrine.orm.default_entity_manager'], $registry->getManagerNames());
+    }
+
+    public function testResetManagerReturnsEntityManager(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        $result = $registry->resetManager();
+
+        static::assertInstanceOf(EntityManagerInterface::class, $result);
+    }
+
+    public function testGetDefaultConnectionNameReturnsDefault(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        static::assertSame('default', $registry->getDefaultConnectionName());
+    }
+
+    public function testGetConnectionsReturnsDefaultConnectionKeyed(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $connections = $registry->getConnections();
+
+        static::assertArrayHasKey('default', $connections);
+    }
+
+    public function testGetConnectionNamesReturnsDefaultServiceMapping(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        static::assertSame(['default' => 'doctrine.dbal.default_connection'], $registry->getConnectionNames());
+    }
+
+    public function testEntityManagerFindReturnsNullByDefault(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertNull($entityManager->find(stdClass::class, 1));
+    }
+
+    public function testEntityManagerContainsReturnsTrueByDefault(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertTrue($entityManager->contains(new stdClass()));
+    }
+
+    public function testEntityManagerIsOpenReturnsTrueByDefault(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertTrue($entityManager->isOpen());
+    }
+
+    public function testEntityManagerWrapInTransactionExecutesCallback(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        $result = $entityManager->wrapInTransaction(static fn(EntityManagerInterface $entityManagerInside): string => 'result');
+
+        static::assertSame('result', $result);
+    }
+
+    public function testEntityManagerCreateQueryReturnsQueryMock(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertInstanceOf(Query::class, $entityManager->createQuery('SELECT e FROM stdClass e'));
+    }
+
+    public function testEntityManagerCreateQueryBuilderReturnsQueryBuilderMock(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertInstanceOf(QueryBuilder::class, $entityManager->createQueryBuilder());
+    }
+
+    public function testEntityManagerGetUnitOfWorkReturnsUnitOfWorkMock(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertInstanceOf(UnitOfWork::class, $entityManager->getUnitOfWork());
+    }
+
+    public function testEntityManagerGetConfigurationReturnsConfigurationMock(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+        $entityManager = $registry->getManager();
+
+        static::assertInstanceOf(Configuration::class, $entityManager->getConfiguration());
     }
 }
