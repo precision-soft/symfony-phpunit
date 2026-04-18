@@ -58,6 +58,12 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "ignore": {
+                "PKSA-5jz8-6tcw-pbk4": "Argument injection via newline in PHP INI forwarded to child processes (GHSA-qrr6-mg7r-m243). Dev-only dependency; no untrusted INI input in our test pipeline. Revisit once a patched 11.5.x is released or PHP floor is raised to 8.3 for PHPUnit ^12.5.22.",
+                "PKSA-z3gr-8qht-p93v": "Unsafe deserialization in PHPT coverage (CVE-2026-24765); fixed in 11.5.50+. Kept in ignore list as belt-and-suspenders while pinned above 11.5.50."
+            }
+        }
     }
 }
