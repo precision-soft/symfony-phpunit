@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `MockContainer::getOrCreateMock()` — only return early when the mock instance exists; the previous `isset($this->mockDtos[...])` check caused `getMock()` to throw `MockNotFoundException` when a DTO was registered but the mock had not yet been created
 
-## [v3.2.0] - 2026-04-12
+## [v3.2.0] - 2026-04-13
 
 ### Changed
 
@@ -114,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ManagerRegistryMock::getManagerForClass()` — returns `null` for classes not in the managed list when `setManagedEntityClasses()` has been configured (previously always returned the entity manager regardless)
 
-## [v3.0.1] - 2026-04-05
+## [v3.0.1] - 2026-04-06
 
 ### Added
 
@@ -258,39 +258,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change `EventDispatcherInterfaceMock::dispatch()` from `func_get_arg(0)` to typed `object $event` parameter
 - Improve `MockDto::getConstruct()` return type from `MockDtoInterface[]|string[]|null` to `list<MockDto|MockDtoInterface|class-string<MockDtoInterface>|scalar>|null`
 
-### Changed
-
-- Rename `$mock` parameter to `$mockInterface` across all mock definitions
-- Refactor `MockContainer::createMock()` from `switch` to explicit `if` chain with proper PHPStan type narrowing
-- Rename project title from `symfony-phpunit` to `Symfony Phpunit`
-
 ### Added
 
-- Add construct branch coverage tests
-
-## [v1.2.1] - 2026-03-27
+- PHPStan level 8 static analysis with baseline
+- `php-cs-fixer` PER-CS2.0 code style enforcement
+- Tests for mock behavior, edge cases, and construct branch coverage
+- Dev infrastructure (Docker, git hooks, utility scripts)
 
 ### Changed
 
 - Improve mock container resolution with `getOrCreateMock()` for recursive dependency handling
 - Harden `ManagerRegistryMock` mock definitions
-
-### Added
-
-- Add construct branch coverage tests
-
-## [v1.2.0] - 2026-03-27
-
-### Added
-
-- Add PHPStan level 8 static analysis with baseline
-- Add tests for mock behavior and edge cases
-- Add `php-cs-fixer` PER-CS2.0 code style enforcement
-- Add dev infrastructure (Docker, git hooks, utility scripts)
+- Rename `$mock` parameter to `$mockInterface` across all mock definitions
+- Refactor `MockContainer::createMock()` from `switch` to explicit `if` chain with proper PHPStan type narrowing
+- Rename project title from `symfony-phpunit` to `Symfony Phpunit`
 
 ### Fixed
 
-- Fix mock behavior inconsistencies
+- Mock behavior inconsistencies
 
 ## [v1.1.3] - 2026-03-20
 
@@ -380,11 +365,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [v2.0.1]: https://github.com/precision-soft/symfony-phpunit/compare/v2.0.0...v2.0.1
 
-[v2.0.0]: https://github.com/precision-soft/symfony-phpunit/compare/v1.2.1...v2.0.0
-
-[v1.2.1]: https://github.com/precision-soft/symfony-phpunit/compare/v1.2.0...v1.2.1
-
-[v1.2.0]: https://github.com/precision-soft/symfony-phpunit/compare/v1.1.3...v1.2.0
+[v2.0.0]: https://github.com/precision-soft/symfony-phpunit/compare/v1.1.3...v2.0.0
 
 [v1.1.3]: https://github.com/precision-soft/symfony-phpunit/compare/v1.1.2...v1.1.3
 
