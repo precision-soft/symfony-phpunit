@@ -26,6 +26,7 @@ use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use ReflectionClass;
+use stdClass;
 
 class ManagerRegistryMock implements MockDtoInterface
 {
@@ -375,7 +376,7 @@ class ManagerRegistryMock implements MockDtoInterface
         return $mockContainer->getOrRegisterMock(
             new MockDto(
                 ClassMetadata::class,
-                [\stdClass::class],
+                [stdClass::class],
                 false,
                 static function (MockInterface $mockInterface): void {
                     $mockInterface->shouldReceive('setIdGeneratorType')

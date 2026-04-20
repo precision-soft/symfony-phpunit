@@ -22,7 +22,7 @@ class EventDispatcherInterfaceMock implements MockDtoInterface
             EventDispatcherInterface::class,
             null,
             false,
-            self::getOnCreate(),
+            static::getOnCreate(),
         );
     }
 

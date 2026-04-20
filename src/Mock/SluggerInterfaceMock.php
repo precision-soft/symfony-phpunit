@@ -24,7 +24,7 @@ class SluggerInterfaceMock implements MockDtoInterface
             SluggerInterface::class,
             null,
             false,
-            self::getOnCreate(),
+            static::getOnCreate(),
         );
     }
 
