@@ -83,10 +83,10 @@ class ManagerRegistryMock implements MockDtoInterface
      */
     public static function setManagedEntityClasses(array $entityClasses): void
     {
-        self::$managedEntityClasses = [];
+        static::$managedEntityClasses = [];
 
         foreach ($entityClasses as $entityClass) {
-            self::$managedEntityClasses[$entityClass] = true;
+            static::$managedEntityClasses[$entityClass] = true;
         }
     }
 
@@ -95,7 +95,7 @@ class ManagerRegistryMock implements MockDtoInterface
      */
     public static function resetManagedEntityClasses(): void
     {
-        self::$managedEntityClasses = [];
+        static::$managedEntityClasses = [];
     }
 
     public static function getOnCreate(): Closure

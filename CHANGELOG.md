@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.4.2] - 2026-04-20 - Align late static binding on ManagerRegistryMock managed-entity writes
+
+### Fixed
+
+- `ManagerRegistryMock::setManagedEntityClasses()` and `resetManagedEntityClasses()` — writes to the managed-entity allow-list now go through `static::$managedEntityClasses` instead of `self::$managedEntityClasses`, matching the `static::` reads in `getOnCreate()` (lines 115/119). Subclasses that redeclare `$managedEntityClasses` previously had their override honored on read but silently bypassed on write, so `setManagedEntityClasses()` populated the parent property while `getManagerForClass()` checked the subclass property. This is an internal LSB alignment on an already-deprecated surface scheduled for removal in 4.0.0
+
 ## [v3.4.1] - 2026-04-20 - Normalize CHANGELOG format and align late static binding across built-in mocks
 
 ### Changed
@@ -397,7 +403,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 - Dev infrastructure (Docker compose, pre-commit hook, utility scripts) under `dev/`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.1...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.2...HEAD
+
+[v3.4.2]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.1...v3.4.2
 
 [v3.4.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.0...v3.4.1
 
