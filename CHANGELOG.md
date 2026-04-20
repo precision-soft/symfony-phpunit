@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [v3.4.0] - 2026-04-20 - Decompose EntityManagerInterface mock into focused helpers
+
+### Changed
+
+- `ManagerRegistryMock::getEntityManagerMock()` — the monolithic configure closure was split into nine focused `protected static` helpers: `configureTransactionApi`, `configurePersistenceApi`, `configureLifecycleApi`, `configureReferenceApi`, `configureMetadataApi`, `configureRepositoryApi`, `configureConnectionApi`, `configureQueryApi`, `configureWrapInTransactionApi`. Each helper covers one surface of `EntityManagerInterface` so subclasses can override a single area (e.g. to redefine the query API) without copy-pasting the whole closure
+- `ManagerRegistryMock` — removed the inline `$repositoryMocks = []` closure capture; repository mocks are now owned by `configureRepositoryApi()` directly
+- `phpstan-baseline.neon` — trimmed after the refactor exposed real types that previously needed ignored entries
+- `tests/Mock/ManagerRegistryMockTest.php` — tests that previously fetched the EntityManagerInterface mock via `$registry->getManager()` now pull it directly from `MockContainer::getMock(EntityManagerInterface::class)`; both paths resolve to the same mock, and going through the container makes the dependency on the shared mock explicit in each test
+
+### Added
+
+- `ManagerRegistryMock::getQueryMock()`, `getQueryBuilderMock()`, `getNativeQueryMock()`, `getUnitOfWorkMock()`, `getConfigurationMock()` — five new `protected static` sub-mock factories extracted from the monolithic closure. Other test classes that need a query / query-builder / unit-of-work / configuration mock by itself can now call these helpers directly instead of reaching through `getEntityManagerMock()`
+
+### Removed
+
+- `ManagerRegistryMock` — unused `Doctrine\ORM\Query\ResultSetMapping` import
+
 ## [v3.3.1] - 2026-04-16
 
 ### Fixed
@@ -234,7 +253,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use static closures in `EventDispatcherInterfaceMock`, `SluggerInterfaceMock`, `ManagerRegistryMock`, and test callbacks
 - Rename test method to descriptive `testPartialMockWithConstructDependenciesResolvesCorrectly`
 - Expand README: add runtime mock registration examples, exceptions table, and clarify `construct` parameter behavior
-- Add missing `v1.2.1` section to CHANGELOG
 - Rename `error()` to `print_error()` in pre-commit hook and remove unused `error()` function from `utility.sh`
 - Remove `code_sniffer()` function from pre-commit hook
 - Add `pstan()` function to `.dev/docker/.profile`
@@ -331,7 +349,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MockContainerTrait` for flexible test integration
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.1...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.0...HEAD
+
+[v3.4.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.1...v3.4.0
 
 [v3.3.1]: https://github.com/precision-soft/symfony-phpunit/compare/v3.3.0...v3.3.1
 

@@ -16,7 +16,6 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Query;
-use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\Persistence\ManagerRegistry;
@@ -160,155 +159,215 @@ class ManagerRegistryMock implements MockDtoInterface
 
     protected static function getEntityManagerMock(MockContainer $mockContainer): MockInterface
     {
-        $repositoryMocks = [];
-
         return $mockContainer->getOrRegisterMock(
             new MockDto(
                 EntityManagerInterface::class,
                 null,
                 false,
-                static function (MockInterface $mockInterface, MockContainer $innerMockContainer) use (&$repositoryMocks): void {
-                    $mockInterface->shouldReceive('beginTransaction')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('persist')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('remove')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('flush')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('commit')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('rollback')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('clear')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('getReference')
-                        ->byDefault()
-                        ->andReturnUsing(
-                            static function (string $entityName, mixed $entityId): ?object {
-                                if (null === $entityId) {
-                                    return null;
-                                }
-
-                                if (false === \class_exists($entityName)) {
-                                    throw new ClassNotFoundException(\sprintf('class `%s` does not exist', $entityName));
-                                }
-
-                                $reflectionClass = new ReflectionClass($entityName);
-                                $reflectionMethod = $reflectionClass->getConstructor();
-
-                                if (null !== $reflectionMethod && 0 < $reflectionMethod->getNumberOfRequiredParameters()) {
-                                    /** @info entities with readonly constructor-promoted properties will be in an invalid state — acceptable for test references used only as identity markers */
-                                    $entity = $reflectionClass->newInstanceWithoutConstructor();
-                                } else {
-                                    $entity = new $entityName();
-                                }
-
-                                if (true === \method_exists($entity, 'setId')) {
-                                    $entity->setId($entityId);
-                                }
-
-                                return $entity;
-                            },
-                        );
-
-                    $mockInterface->shouldReceive('getClassMetadata')
-                        ->byDefault()
-                        ->andReturn(static::getClassMetadataMock($innerMockContainer));
-
-                    $mockInterface->shouldReceive('getRepository')
-                        ->byDefault()
-                        ->andReturnUsing(
-                            static function (string $entityName) use (&$repositoryMocks): MockInterface {
-                                if (true === isset($repositoryMocks[$entityName])) {
-                                    return $repositoryMocks[$entityName];
-                                }
-
-                                $repositoryMock = Mockery::mock(EntityRepository::class);
-                                $repositoryMocks[$entityName] = $repositoryMock;
-
-                                return $repositoryMock;
-                            },
-                        );
-
-                    $mockInterface->shouldReceive('getConnection')
-                        ->byDefault()
-                        ->andReturn(static::getConnectionMock($innerMockContainer));
-
-                    $mockInterface->shouldReceive('find')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('detach')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('refresh')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('contains')
-                        ->byDefault()
-                        ->andReturn(true);
-
-                    $mockInterface->shouldReceive('close')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('isOpen')
-                        ->byDefault()
-                        ->andReturn(true);
-
-                    $mockInterface->shouldReceive('lock')
-                        ->byDefault()
-                        ->andReturnNull();
-
-                    $mockInterface->shouldReceive('wrapInTransaction')
-                        ->byDefault()
-                        ->andReturnUsing(
-                            static function (callable $callback) use ($mockInterface): mixed {
-                                return $callback($mockInterface);
-                            },
-                        );
-
-                    $mockInterface->shouldReceive('createQuery')
-                        ->byDefault()
-                        ->andReturnUsing(static fn(): Query => Mockery::mock(Query::class));
-
-                    $mockInterface->shouldReceive('createQueryBuilder')
-                        ->byDefault()
-                        ->andReturnUsing(static fn(): QueryBuilder => Mockery::mock(QueryBuilder::class));
-
-                    $mockInterface->shouldReceive('createNativeQuery')
-                        ->byDefault()
-                        ->andReturnUsing(
-                            static fn(string $sql, ResultSetMapping $rsm): NativeQuery => Mockery::mock(NativeQuery::class),
-                        );
-
-                    $mockInterface->shouldReceive('getUnitOfWork')
-                        ->byDefault()
-                        ->andReturnUsing(static fn(): UnitOfWork => Mockery::mock(UnitOfWork::class));
-
-                    $mockInterface->shouldReceive('getConfiguration')
-                        ->byDefault()
-                        ->andReturnUsing(static fn(): Configuration => Mockery::mock(Configuration::class));
+                static function (MockInterface $mockInterface, MockContainer $innerMockContainer): void {
+                    static::configureTransactionApi($mockInterface);
+                    static::configurePersistenceApi($mockInterface);
+                    static::configureLifecycleApi($mockInterface);
+                    static::configureReferenceApi($mockInterface);
+                    static::configureMetadataApi($mockInterface, $innerMockContainer);
+                    static::configureRepositoryApi($mockInterface);
+                    static::configureConnectionApi($mockInterface, $innerMockContainer);
+                    static::configureQueryApi($mockInterface, $innerMockContainer);
+                    static::configureWrapInTransactionApi($mockInterface);
                 },
             ),
         );
+    }
+
+    protected static function configureTransactionApi(MockInterface $mockInterface): void
+    {
+        $mockInterface->shouldReceive('beginTransaction')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('commit')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('rollback')
+            ->byDefault()
+            ->andReturnNull();
+    }
+
+    protected static function configurePersistenceApi(MockInterface $mockInterface): void
+    {
+        $mockInterface->shouldReceive('persist')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('remove')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('flush')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('detach')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('refresh')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('find')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('contains')
+            ->byDefault()
+            ->andReturn(true);
+
+        $mockInterface->shouldReceive('lock')
+            ->byDefault()
+            ->andReturnNull();
+    }
+
+    protected static function configureLifecycleApi(MockInterface $mockInterface): void
+    {
+        $mockInterface->shouldReceive('clear')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('close')
+            ->byDefault()
+            ->andReturnNull();
+
+        $mockInterface->shouldReceive('isOpen')
+            ->byDefault()
+            ->andReturn(true);
+    }
+
+    protected static function configureReferenceApi(MockInterface $mockInterface): void
+    {
+        $mockInterface->shouldReceive('getReference')
+            ->byDefault()
+            ->andReturnUsing(
+                static function (string $entityName, mixed $entityId): ?object {
+                    if (null === $entityId) {
+                        return null;
+                    }
+
+                    if (false === \class_exists($entityName)) {
+                        throw new ClassNotFoundException(\sprintf('class `%s` does not exist', $entityName));
+                    }
+
+                    $reflectionClass = new ReflectionClass($entityName);
+                    $reflectionMethod = $reflectionClass->getConstructor();
+
+                    if (null !== $reflectionMethod && 0 < $reflectionMethod->getNumberOfRequiredParameters()) {
+                        /** @info entities with readonly constructor-promoted properties will be in an invalid state — acceptable for test references used only as identity markers */
+                        $entity = $reflectionClass->newInstanceWithoutConstructor();
+                    } else {
+                        $entity = new $entityName();
+                    }
+
+                    if (true === \method_exists($entity, 'setId')) {
+                        $entity->setId($entityId);
+                    }
+
+                    return $entity;
+                },
+            );
+    }
+
+    protected static function configureMetadataApi(MockInterface $mockInterface, MockContainer $mockContainer): void
+    {
+        $mockInterface->shouldReceive('getClassMetadata')
+            ->byDefault()
+            ->andReturn(static::getClassMetadataMock($mockContainer));
+    }
+
+    protected static function configureRepositoryApi(MockInterface $mockInterface): void
+    {
+        $repositoryMocks = [];
+
+        $mockInterface->shouldReceive('getRepository')
+            ->byDefault()
+            ->andReturnUsing(
+                static function (string $entityName) use (&$repositoryMocks): MockInterface {
+                    if (true === isset($repositoryMocks[$entityName])) {
+                        return $repositoryMocks[$entityName];
+                    }
+
+                    $repositoryMock = Mockery::mock(EntityRepository::class);
+                    $repositoryMocks[$entityName] = $repositoryMock;
+
+                    return $repositoryMock;
+                },
+            );
+    }
+
+    protected static function configureConnectionApi(MockInterface $mockInterface, MockContainer $mockContainer): void
+    {
+        $mockInterface->shouldReceive('getConnection')
+            ->byDefault()
+            ->andReturn(static::getConnectionMock($mockContainer));
+    }
+
+    protected static function configureQueryApi(MockInterface $mockInterface, MockContainer $mockContainer): void
+    {
+        $mockInterface->shouldReceive('createQuery')
+            ->byDefault()
+            ->andReturn(static::getQueryMock($mockContainer));
+
+        $mockInterface->shouldReceive('createQueryBuilder')
+            ->byDefault()
+            ->andReturn(static::getQueryBuilderMock($mockContainer));
+
+        $mockInterface->shouldReceive('createNativeQuery')
+            ->byDefault()
+            ->andReturn(static::getNativeQueryMock($mockContainer));
+
+        $mockInterface->shouldReceive('getUnitOfWork')
+            ->byDefault()
+            ->andReturn(static::getUnitOfWorkMock($mockContainer));
+
+        $mockInterface->shouldReceive('getConfiguration')
+            ->byDefault()
+            ->andReturn(static::getConfigurationMock($mockContainer));
+    }
+
+    protected static function configureWrapInTransactionApi(MockInterface $mockInterface): void
+    {
+        $mockInterface->shouldReceive('wrapInTransaction')
+            ->byDefault()
+            ->andReturnUsing(
+                static function (callable $callback) use ($mockInterface): mixed {
+                    return $callback($mockInterface);
+                },
+            );
+    }
+
+    protected static function getQueryMock(MockContainer $mockContainer): MockInterface
+    {
+        return $mockContainer->getOrRegisterMock(new MockDto(Query::class));
+    }
+
+    protected static function getQueryBuilderMock(MockContainer $mockContainer): MockInterface
+    {
+        return $mockContainer->getOrRegisterMock(new MockDto(QueryBuilder::class));
+    }
+
+    protected static function getNativeQueryMock(MockContainer $mockContainer): MockInterface
+    {
+        return $mockContainer->getOrRegisterMock(new MockDto(NativeQuery::class));
+    }
+
+    protected static function getUnitOfWorkMock(MockContainer $mockContainer): MockInterface
+    {
+        return $mockContainer->getOrRegisterMock(new MockDto(UnitOfWork::class));
+    }
+
+    protected static function getConfigurationMock(MockContainer $mockContainer): MockInterface
+    {
+        return $mockContainer->getOrRegisterMock(new MockDto(Configuration::class));
     }
 
     protected static function getClassMetadataMock(MockContainer $mockContainer): MockInterface
