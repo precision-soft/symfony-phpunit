@@ -36,7 +36,7 @@ trait MockContainerTrait
         return $this->mockContainer->getMock($class);
     }
 
-    protected function registerMockDto(MockDto $mockDto): self
+    protected function registerMockDto(MockDto $mockDto): static
     {
         $this->initializeMockContainer()->registerMockDto($mockDto);
 
@@ -44,7 +44,7 @@ trait MockContainerTrait
     }
 
     /** @param class-string $class */
-    protected function registerMock(string $class, MockInterface $mockInterface): self
+    protected function registerMock(string $class, MockInterface $mockInterface): static
     {
         $this->initializeMockContainer()->registerMock($class, $mockInterface);
 

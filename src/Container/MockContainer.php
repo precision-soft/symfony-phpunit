@@ -32,7 +32,7 @@ class MockContainer
      *
      * @throws MockAlreadyRegisteredException
      */
-    public function registerMockDto(MockDto $mockDto): self
+    public function registerMockDto(MockDto $mockDto): static
     {
         if (true === isset($this->mockDtos[$mockDto->getClass()])) {
             throw new MockAlreadyRegisteredException(
@@ -78,7 +78,7 @@ class MockContainer
      * @param class-string $class
      * @throws MockAlreadyRegisteredException
      */
-    public function registerMock(string $class, MockInterface $mockInterface): self
+    public function registerMock(string $class, MockInterface $mockInterface): static
     {
         if (true === isset($this->mocks[$class])) {
             throw new MockAlreadyRegisteredException(

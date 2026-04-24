@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.4.3] - 2026-04-23 - Widen fluent return types to static on MockContainer and MockContainerTrait
+
+### Changed
+
+- `MockContainer::registerMockDto()` and `registerMock()` — return type widened from `self` to `static`; both methods are on a concrete non-final class with `protected` properties, so callers that extend `MockContainer` and chain these calls now receive the subclass type rather than the base class
+- `MockContainerTrait::registerMockDto()` and `registerMock()` — same `self` → `static` fix for the trait-provided fluent methods used in `AbstractTestCase` and its subclasses
+
 ## [v3.4.2] - 2026-04-20 - Align late static binding on ManagerRegistryMock managed-entity writes
 
 ### Fixed
@@ -403,7 +410,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 - Dev infrastructure (Docker compose, pre-commit hook, utility scripts) under `dev/`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.2...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.3...HEAD
+
+[v3.4.3]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.2...v3.4.3
 
 [v3.4.2]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.1...v3.4.2
 
