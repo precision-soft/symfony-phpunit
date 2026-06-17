@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.4.4] - 2026-06-17 - Add composer convenience scripts
+
+### Added
+
+- `composer.json` — added `test`, `phpstan`, `cs-check`, `cs-fix` and an aggregate `check` convenience script wrapping `simple-phpunit`, `phpstan`, and `php-cs-fixer`
+
 ## [v3.4.3] - 2026-04-23 - Widen fluent return types to static on MockContainer and MockContainerTrait
 
 ### Changed
