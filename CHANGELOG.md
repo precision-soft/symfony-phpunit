@@ -416,7 +416,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 - Dev infrastructure (Docker compose, pre-commit hook, utility scripts) under `dev/`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.3...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.4...HEAD
+
+[v3.4.4]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.3...v3.4.4
 
 [v3.4.3]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.2...v3.4.3
 
