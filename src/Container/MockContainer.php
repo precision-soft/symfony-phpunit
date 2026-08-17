@@ -13,6 +13,7 @@ use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\Exception\CircularDependencyException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockClassMismatchException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use Throwable;
@@ -26,12 +27,7 @@ class MockContainer
     /** @var array<string, true> */
     protected array $creating = [];
 
-    /**
-     * Registers a MockDto configuration for deferred mock creation. The mock is created lazily on first call to
-     * getMock(). Throws MockAlreadyRegisteredException if a DTO for the same class was already registered.
-     *
-     * @throws MockAlreadyRegisteredException
-     */
+    /** @throws MockAlreadyRegisteredException */
     public function registerMockDto(MockDto $mockDto): static
     {
         if (true === isset($this->mockDtos[$mockDto->getClass()])) {
@@ -52,9 +48,6 @@ class MockContainer
     }
 
     /**
-     * Returns the mock for the given class, creating it lazily from its registered MockDto if not yet instantiated.
-     * Throws MockNotFoundException if no MockDto has been registered for the class.
-     *
      * @template T of object
      * @param class-string<T> $class
      * @return MockInterface&T
@@ -71,15 +64,31 @@ class MockContainer
             $this->createMock($this->mockDtos[$class]);
         }
 
-        return $this->mocks[$class];
+        /** @var MockInterface&T $mockInterface */
+        $mockInterface = $this->mocks[$class];
+
+        return $mockInterface;
     }
 
     /**
      * @param class-string $class
+     * @throws MockClassMismatchException
      * @throws MockAlreadyRegisteredException
      */
     public function registerMock(string $class, MockInterface $mockInterface): static
     {
+        if (false === $mockInterface instanceof $class) {
+            throw new MockClassMismatchException(
+                \sprintf('mock is not an instance of class `%s`', $class),
+                0,
+                null,
+                [
+                    'expectedClass' => $class,
+                    'actualClass' => $mockInterface::class,
+                ],
+            );
+        }
+
         if (true === isset($this->mocks[$class])) {
             throw new MockAlreadyRegisteredException(
                 \sprintf('mock already registered for class `%s`', $class),
@@ -92,10 +101,6 @@ class MockContainer
         return $this;
     }
 
-    /**
-     * Returns an existing mock for the class described by the DTO, or registers the DTO and creates the mock if none
-     * exists yet. The DTO itself validates that the class/interface exists at construction time.
-     */
     public function getOrRegisterMock(MockDto $mockDto): MockInterface
     {
         if (true === $this->hasMock($mockDto->getClass())) {
@@ -122,10 +127,6 @@ class MockContainer
         Mockery::close();
     }
 
-    /**
-     * Creates or returns an existing mock for the given class. Override in subclasses to customize mock creation
-     * logic for sub-dependencies. Called internally by createMock() when resolving MockDto constructor arguments.
-     */
     protected function getOrCreateMock(MockDto $mockDto): MockInterface
     {
         if (true === isset($this->mocks[$mockDto->getClass()])) {

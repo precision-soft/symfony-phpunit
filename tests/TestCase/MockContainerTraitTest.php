@@ -10,10 +10,12 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\TestCase;
 
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Mockery\Exception\InvalidCountException;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockContainerNotInitializedException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ConstructorTrackingDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\MockContainerTraitTearDownTestCase;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\MockContainerTraitTestCase;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
@@ -54,6 +56,33 @@ final class MockContainerTraitTest extends TestCase
         $mockContainerTraitTearDownTestCase->traitTearDown();
 
         $this->addToAssertionCount(1);
+    }
+
+    public function testTearDownClosesTheContainerAndVerifiesItsExpectations(): void
+    {
+        $mockContainerTraitTearDownTestCase = new MockContainerTraitTearDownTestCase('testNothing');
+
+        $mockContainerTraitTearDownTestCase->registerMockDto(
+            new MockDto(
+                ConstructorTrackingDto::class,
+                null,
+                false,
+                static function (MockInterface $mockInterface): void {
+                    $mockInterface->shouldReceive('describe')
+                        ->once();
+                },
+            ),
+        );
+
+        $mockContainerTraitTearDownTestCase->get(ConstructorTrackingDto::class);
+
+        try {
+            $mockContainerTraitTearDownTestCase->traitTearDown();
+
+            static::fail('tearDown() must close the container, which verifies the expectations set on its mocks');
+        } catch (InvalidCountException $invalidCountException) {
+            static::assertStringContainsString('describe', $invalidCountException->getMessage());
+        }
     }
 
     public function testRegisterMockDtoInitializesContainerOnFirstCall(): void

@@ -2,10 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v3.5.0] - 2026-08-17 - Cold-start gate, mock class validation and a real end-to-end harness
+
+### Fixed
+
+- `phpstan-baseline.neon` — **deleted.** Its three entries were each legitimate, but none of them was baseline material: `MockContainer::getMock()`'s `MockInterface&T` return is an invariant this class enforces rather than one PHPStan can derive — `createMock()` builds the double from the very `class-string` used as the key, and `registerMock()` refuses a mock that is not an instance of the class it is registered under — and it is now stated as a local `@var` at the one line that needs it; the `class-string` error in `ManagerRegistryMockTest` is a deliberate rejection-branch test and moved to `phpstan.neon` with its reason; and `trait.unused` on `ManagerRegistryMockTrait` was reporting a real coverage gap, not a false positive (see Added). Level 8 is `[OK]` with two `ignoreErrors` entries, each carrying its justification. The surviving `function.alreadyNarrowedType` entry now covers **four** occurrences rather than the two it was written against, which is exactly why it deliberately
+  carries no `count`
+- `phpstan.neon` — removed `scanDirectories: vendor/bin/.phpunit/`. That directory is only created by `simple-phpunit`, so on a fresh clone PHPStan aborted with `Scanned directory … does not exist` before analysing anything; because `composer check` runs `phpstan` before `test`, there was no order in which a clean checkout could pass the gate. The directory was also redundant — `phpunit/phpunit` is a direct `require-dev`, so the PHPUnit classes are already autoloaded
+- `phpstan.neon` — the four `function.alreadyNarrowedType` errors reported on `MockContainerTrait::setUp()` (one per class using the trait) are now suppressed by an explicit `ignoreErrors` entry keyed on identifier and path, deliberately without a `count` so it does not have to be re-tuned every time a class starts using the trait. `method_exists(static::class, 'getMockDto')` stays: it is genuinely uncertain for consumers that use the trait without implementing `MockDtoInterface`, and PHPStan only sees it as always-true because every user inside this package does implement it
+- `src/TestCase/Trait/MockContainerTrait.php` — removed the inline `@phpstan-ignore function.alreadyNarrowedType` above the `method_exists()` check. It suppressed nothing (measured: analysing `src/` alone still produced one error per using class) while claiming the problem was handled
+- `MockDto::$construct` — the declared type was `list<MockDto|MockDtoInterface|class-string<MockDtoInterface>|scalar>|null`, narrower than the contract `MockContainer` actually implements: it resolves those three shapes into mocks and passes **every other entry to Mockery untouched**, so a real collaborator or an array is an equally valid constructor argument. Widened to `list<mixed>|null` on both the constructor and `getConstruct()`, with the resolution rules moved into the prose. Documentation only, no runtime change — but it was reported as `argument.type` in every consumer that passes a real dependency, which is why those errors sat in consumer baselines instead of being fixed here
+- `README.md` — the `MockDto::$partial` limitation claimed `makePartial()` bypasses the real constructor. Measured: when `construct` is given, the original constructor runs in partial and non-partial mode alike; it is only skipped when `construct` is `null`
+- `MockContainerTest::testNonPartialMockRunsTheOriginalConstructorButStubsEveryMethod` — the test provoked a rejected call to prove a full mock stubs everything, and left the resulting `BadMethodCallException` recorded and undismissed on the mock. Mockery records every exception a mock throws and `MockeryPHPUnitIntegration` marks the test risky for any that was not dismissed — but on PHPUnit 10/11 **that check was dead**: up to mockery 1.6.12 it was guarded by `method_exists($this, 'markAsRisky')`, and PHPUnit 11's `TestCase` has no such method, so `checkMockeryExceptions()` returned before looking at anything. Mockery 1.6.13 routes it through `valueObjectForEvents()` and PHPUnit's event facade instead, at which point the long-standing omission surfaced immediately and, with `failOnRisky`, turned the gate red. The rejection is now asserted with an explicit `try`/`catch` that checks the message names the method and then calls `dismiss()`, which is Mockery's own way of saying the test
+  caused this on purpose. The behaviour under test never changed
+- `composer.json` — removed the `config.audit.ignore` block. Its two entries (`PKSA-5jz8-6tcw-pbk4`, `PKSA-z3gr-8qht-p93v`) were both written against PHPUnit versions below 11.5.50 and matched nothing at the version this package locks; verified by deleting the block and re-running `composer audit --locked`, which reports the same clean result either way. Composer does not warn about an audit-ignore entry that matches nothing, so a stale suppression here is silent by construction — and it would have hidden a genuine future advisory carrying one of those identifiers
+
+### Changed
+
+- `MockContainer::registerMock()` — now rejects a mock that is not an instance of the class it is registered under, throwing the new `MockClassMismatchException`. Previously `registerMock(Foo::class, Mockery::mock(Bar::class))` was accepted and `getMock(Foo::class)` handed back the `Bar` double while declaring `MockInterface&T`, so both PHPStan and the reader were told it was a `Foo` and the mismatch only surfaced later as a confusing `BadMethodCallException`. **This turns a previously silent mistake into an exception**; all six consumer suites in the portfolio were verified green against this change. The exception carries `expectedClass` and `actualClass` in its context, because the message can only name the class the mock was registered under while the useful half of the failure is the class the mock actually belongs to
+- `MockContainer::registerMock()` — as a consequence of the check above, a `final` or `readonly` class can no longer be registered. Mockery refuses `Mockery::mock(FinalThing::class)` outright and the only double it can build for one is a proxied partial made from an instance, which is not an instance of the class it proxies — so accepting it would make `getMock()` hand back something that is not the `MockInterface&T` it declares. Now documented as a limitation and pinned by a test rather than left to be discovered; depend on an interface, or use the proxied partial directly instead of through the container
+- `composer.json` — `test` now runs `simple-phpunit --exclude-group integration` and a new `test-integration` script runs the integration group, so `composer check` stays fast and offline while `.dev/validate/all.sh --integration` has a script to call
+
+### Added
+
+- `Contract\ExceptionInterface` and `Exception\Trait\ExceptionTrait` — exceptions now carry a structured `context` array alongside the message, read with `getContext()` and set with `setContext()` or the new fourth constructor argument. The context is purely additive: no existing message, code or previous throwable changed, so a consumer logging only `getMessage()` sees exactly what it saw before. Ported from `precision-soft/symfony-console`, which has carried it since v4.5.0, so every package in the portfolio now exposes the same contract. Note for consumers subclassing the package exception: a subclass that already declares its own `$context` property or a `getContext()`/`setContext()` method will collide with the trait
+- `src/Exception/MockClassMismatchException.php` — thrown by `MockContainer::registerMock()` when the mock does not belong to the class it is registered under
+- `tests/TestCase/Trait/ManagerRegistryMockTraitTest.php` — the deprecated process-wide managed-class API had **no test at all**. Every other test scopes managed classes per mock through `configureManagedEntityClasses()`, which overrides `getManagerForClass` on the mock itself, so `setManagedEntityClasses()`, `resetManagedEntityClasses()`, the `ManagerRegistryMockTrait` cleanup hook and both static-fallback branches inside `getOnCreate()` had never executed. PHPStan had been reporting the gap for as long as the baseline existed, as `trait.unused`. Verified by control runs: neutering `setManagedEntityClasses()` turns all three tests red, neutering `resetManagedEntityClasses()` turns two of them red
+- `tests/Vendor/MockeryContractTest.php` — pins the Mockery behaviour this package is built on (`Mockery::mock()` identity for classes and interfaces, constructor arguments reaching the original constructor, `byDefault`/`andReturn`/`andReturnNull`/`andReturnUsing` reachability, `byDefault` being overridable by a later expectation, `makePartial()` deferral, and the existence of `HigherOrderMessage`). `mockery/mockery: ^1.0` is a wide constraint and every suite in the portfolio asserts through this package, so a semantic change has to fail here rather than as a puzzling false positive downstream
+- `tests/Functional/AbstractTestCaseFunctionalTest.php` — the package's first end-to-end test: it generates a test case extending `AbstractTestCase` and runs a real PHPUnit process over it, asserting both that `setUp()` wires the container and that an unfulfilled Mockery expectation actually turns the run red. The second case is the one that matters — if the harness ever stopped propagating Mockery's verification failure, every suite in the portfolio would go green while asserting nothing
+- Regression coverage for behaviour that was correct but untested: mocks are not created until the first `getMock()` (`onCreate` is invoked exactly once, on first access), constructor dependencies are not resolved at registration time, a circular chain of length three is detected and clears the `creating` guard for every link, a mock of a subclass is accepted by `registerMock()`, and the constructor/stub semantics of partial versus non-partial mocks
+- Coverage for the three lifecycle guarantees every suite built on this package depends on, none of which had a test that could fail. **`MockContainer::close()` verifies the expectations of the mocks it manages** — every other test in this package runs under `MockeryPHPUnitIntegration`, whose own post-condition hook closes Mockery as well, so removing the `Mockery::close()` call left the whole suite and the functional test green while a consumer using `MockContainer` on its own silently stopped verifying anything. **`MockContainerTrait::tearDown()` closes the container**, driven by hand so that hook cannot stand in for the call under test. And **`MockContainerTrait::tearDown()` calls `parent::tearDown()`**, which for `AbstractKernelTestCase` is what shuts the booted kernel down between tests — nothing in the suite booted a kernel, so that call could have been dropped without a single test going red
+- `MockContainer::createMock()` and `getOrCreateMock()` are documented as the extension points a subclass overrides, and are now exercised by one (`tests/Utility/RecordingMockContainer.php`) — the package never subclasses its own container, so nothing proved the documented override actually works
+- `MockContainerTrait::registerMock()` and `initializeMockContainer()` are now exercised from a real subclass of `AbstractTestCase`, the way a consumer reaches them. The existing coverage went through a fixture that aliases the trait methods `as public`, which cannot tell `protected` from `private` and does not resolve `??=` the way a second call from a consumer does
+- `README.md` — a Test Conventions section recording the canon every suite in the portfolio follows, and the two directories in this package that deliberately mirror nothing in `src/`
+- `README.md` — `MockClassMismatchException` added to the exceptions table
 
 ## [v3.4.4] - 2026-06-17 - Add composer convenience scripts
 
@@ -141,7 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ManagerRegistryMock::getClassMetadataMock()` — drop the unused `$innerMockContainer` parameter from the `ClassMetadata` closure
 - `MockContainerTrait` — extract `initializeMockContainer()` so the duplicated `??= new MockContainer()` block is no longer inlined in both `registerMockDto()` and `registerMock()`
 
-## [v3.1.0] - 2026-04-07 - Add getOrRegisterMock(), managed entity class list, and reset trait
+## [v3.1.0] - 2026-04-07 - Add getOrRegisterMock (), managed entity class list, and reset trait
 
 ### Fixed
 
@@ -208,7 +242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New test utility fixtures: `tests/Utility/DeepNestedServiceDto.php`, `tests/Utility/NullableConstructorDto.php`
 - README — `Extending AbstractTestCase` section documenting the custom base test case pattern with shared helpers
 
-## [v2.1.2] - 2026-04-01 - Add hasMock(), phpstan-mockery extension, and export-ignore rules
+## [v2.1.2] - 2026-04-01 - Add hasMock (), phpstan-mockery extension, and export-ignore rules
 
 ### Changed
 
@@ -241,7 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/TestCase/MockContainerTraitTest.php` — extract `MockContainerTraitTestCase` / `MockContainerTraitTearDownTestCase` concrete doubles (replacing anonymous classes), shrinking PHPStan baseline from 13 to 6
 - README code samples — add missing `use` import statements so copy-paste examples type-check
 
-## [v2.1.0] - 2026-03-30 - Add circular dependency guard and registerMock() trait API
+## [v2.1.0] - 2026-03-30 - Add circular dependency guard and registerMock () trait API
 
 ### Changed
 
@@ -261,7 +295,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New test fixtures: `tests/Utility/CircularAlphaMock.php`, `tests/Utility/CircularBetaMock.php`, plus a `CircularDependencyException` case in `MockContainerEdgeCaseTest`
 - New exception: `src/Exception/CircularDependencyException.php`
 
-## [v2.0.4] - 2026-03-30 - Fix README close() description and clean up pre-commit hook
+## [v2.0.4] - 2026-03-30 - Fix README close () description and clean up pre-commit hook
 
 ### Fixed
 
@@ -416,7 +450,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 - Dev infrastructure (Docker compose, pre-commit hook, utility scripts) under `dev/`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.4...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.5.0...HEAD
+
+[v3.5.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.4...v3.5.0
 
 [v3.4.4]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.3...v3.4.4
 

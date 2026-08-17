@@ -5,6 +5,7 @@
          beStrictAboutOutputDuringTests="true"
          colors="true"
          executionOrder="random"
+         failOnDeprecation="true"
          failOnRisky="true"
          failOnWarning="true"
          resolveDependencies="true"

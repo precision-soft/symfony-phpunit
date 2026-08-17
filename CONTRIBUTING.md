@@ -10,8 +10,7 @@ Prerequisites:
 - Composer
 - Docker (the repository ships a containerized development shell under [`.dev/`](./.dev/))
 
-The repository uses a Docker-based development shell driven by the [`./dc`](./dc) wrapper (a thin Docker
-Compose wrapper), which also installs the repository git hooks (see the `install-hooks` script in
+The repository uses a Docker-based development shell driven by the [`./dc`](./dc) wrapper (a thin Docker Compose wrapper), which also installs the repository git hooks (see the `install-hooks` script in
 [`composer.json`](./composer.json)):
 
 ```bash
@@ -23,8 +22,7 @@ Inside the container, run the verification commands described below.
 
 ## Verification
 
-The development shell profile ([`.dev/docker/.profile`](./.dev/docker/.profile)) defines convenience
-functions:
+The development shell profile ([`.dev/docker/.profile`](./.dev/docker/.profile)) defines convenience functions:
 
 - `ci` / `cu` — `composer install` / `composer update`
 - `pfix` — run `php-cs-fixer` (PER-CS 2.0 code style)
@@ -38,9 +36,7 @@ Run the full suite before opening a pull request:
 full
 ```
 
-The git `pre-commit` hook ([`.dev/git-hooks/pre-commit`](./.dev/git-hooks/pre-commit)) enforces the same
-checks on staged PHP files: `php-cs-fixer`, `php -l`, `phpstan`, and `simple-phpunit`. A commit is
-rejected if any of them fail.
+The git `pre-commit` hook ([`.dev/git-hooks/pre-commit`](./.dev/git-hooks/pre-commit)) enforces the same checks on staged PHP files: `php-cs-fixer`, `php -l`, `phpstan`, and `simple-phpunit`. A commit is rejected if any of them fail.
 
 ## Development workflow
 
@@ -54,8 +50,7 @@ Before opening a pull request:
 ## Code style
 
 The repository enforces a strict, opinionated style on top of
-[PER-CS 2.0](https://www.php-fig.org/per/coding-style/). `php-cs-fixer` and `phpstan` (level 8) are the
-automated enforcers; the rules below are normative and contributions are expected to follow them.
+[PER-CS 2.0](https://www.php-fig.org/per/coding-style/). `php-cs-fixer` and `phpstan` (level 8) are the automated enforcers; the rules below are normative and contributions are expected to follow them.
 
 ### Naming
 
@@ -77,13 +72,11 @@ automated enforcers; the rules below are normative and contributions are expecte
   `null === $value`, `'x' === $value`, `0 === count($items)`.
 - **Never use the `!` negation operator.** Express conditions with explicit comparisons instead.
 - **No implicit boolean coercion.** Every condition must be an explicit comparison:
-  `true === $flag`, `null === $value`, `false === class_exists($class)`, `true === empty($items)`.
-  Never write bare `if ($var)`, `if (!$var)`, or `if (empty($var))`.
+  `true === $flag`, `null === $value`, `false === class_exists($class)`, `true === empty($items)`. Never write bare `if ($var)`, `if (!$var)`, or `if (empty($var))`.
 
 ### Imports
 
-- **All classes are imported via `use` at the top of the file.** Never reference a class by its
-  fully-qualified name inline (no `new \Foo\Bar\Baz()` or `\Foo\Bar\Baz::method()`).
+- **All classes are imported via `use` at the top of the file.** Never reference a class by its fully-qualified name inline (no `new \Foo\Bar\Baz()` or `\Foo\Bar\Baz::method()`).
 - On a naming conflict, use an alias: `use Foo\Bar\Baz as AliasedBaz;`.
 - Built-in PHP functions may keep the backslash prefix (`\sprintf`, `\time`, `\ini_get`); the `use`
   rule applies only to classes and interfaces.
@@ -101,19 +94,16 @@ Top-to-bottom order inside a class body:
 7. Static methods — `public` → `protected` → `private`.
 8. Instance methods — `public` → `protected` → `private`.
 
-Getters/setters do not form their own block: they follow the declaration order of the properties they
-access, grouped by visibility.
+Getters/setters do not form their own block: they follow the declaration order of the properties they access, grouped by visibility.
 
 ### Getters and setters
 
 - Always `getXyz()` / `setXyz()` for property accessors — never `isXyz()`, even for booleans.
-- `hasXyz()` is allowed for boolean query / existence-check methods (for example `hasPermission()`);
-  these are query methods, not property getters.
+- `hasXyz()` is allowed for boolean query / existence-check methods (for example `hasPermission()`); these are query methods, not property getters.
 
 ### Exceptions
 
-- Always throw **project-specific exceptions** from the project's own `Exception` namespace. Never throw
-  generic `\Exception` or `\RuntimeException`.
+- Always throw **project-specific exceptions** from the project's own `Exception` namespace. Never throw generic `\Exception` or `\RuntimeException`.
 
 ### Doctrine entities
 
@@ -147,6 +137,5 @@ If the issue is security-sensitive, do not file it publicly; follow [`SECURITY.m
 
 ## Security and support
 
-- For security issues, follow [`SECURITY.md`](./SECURITY.md): report privately through GitHub's private
-  vulnerability reporting with a minimal reproduction and impact assessment. Do not open a public issue.
+- For security issues, follow [`SECURITY.md`](./SECURITY.md): report privately through GitHub's private vulnerability reporting with a minimal reproduction and impact assessment. Do not open a public issue.
 - For non-security questions, use the standard issue tracker and include context (version, steps, logs).

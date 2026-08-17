@@ -16,10 +16,18 @@ use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\CircularDependencyException;
 use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockAlreadyRegisteredException;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockClassMismatchException;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\CircularAlphaMock;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ConstructorTrackingDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ExtendedSecondMockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\FinalDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\RecordingMockContainer;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\TripleCircularAlphaMock;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\TripleCircularBetaMock;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\UnrelatedDto;
 
 /**
  * @internal
@@ -258,11 +266,159 @@ final class MockContainerEdgeCaseTest extends TestCase
             static::assertSame('onCreate failure', $exception->getMessage());
         }
 
-        /** @info Re-register and retry — both mock and mockDto were cleaned on failure */
         $this->mockContainer->registerMockDto($mockDto);
         $mockInterface = $this->mockContainer->getMock(SecondMockDto::class);
 
         static::assertInstanceOf(MockInterface::class, $mockInterface);
         static::assertSame(2, $callCount);
+    }
+
+    public function testCreateMockAndGetOrCreateMockAreOverridableExtensionPoints(): void
+    {
+        $recordingMockContainer = new RecordingMockContainer();
+
+        $recordingMockContainer->registerMockDto(
+            new MockDto(ConstructorTrackingDto::class, [new MockDto(SecondMockDto::class)]),
+        );
+
+        $recordingMockContainer->getMock(ConstructorTrackingDto::class);
+
+        static::assertSame(
+            [ConstructorTrackingDto::class, SecondMockDto::class],
+            $recordingMockContainer->getCreatedClassList(),
+        );
+        static::assertSame([SecondMockDto::class], $recordingMockContainer->getResolvedDependencyClassList());
+
+        $recordingMockContainer->close();
+    }
+
+    public function testRegisterMockRejectsAMockOfAForeignClass(): void
+    {
+        $unrelatedMockInterface = Mockery::mock(UnrelatedDto::class);
+
+        $this->expectException(MockClassMismatchException::class);
+        $this->expectExceptionMessage(
+            \sprintf('mock is not an instance of class `%s`', SecondMockDto::class),
+        );
+
+        $this->mockContainer->registerMock(SecondMockDto::class, $unrelatedMockInterface);
+    }
+
+    public function testRegisterMockRejectionCarriesBothClassesInItsContext(): void
+    {
+        $unrelatedMockInterface = Mockery::mock(UnrelatedDto::class);
+
+        try {
+            $this->mockContainer->registerMock(SecondMockDto::class, $unrelatedMockInterface);
+
+            static::fail('registerMock() must reject a mock of a foreign class');
+        } catch (MockClassMismatchException $mockClassMismatchException) {
+            static::assertSame(
+                ['expectedClass' => SecondMockDto::class, 'actualClass' => $unrelatedMockInterface::class],
+                $mockClassMismatchException->getContext(),
+            );
+            static::assertSame(0, $mockClassMismatchException->getCode());
+        }
+    }
+
+    public function testRegisterMockRejectsAProxiedPartialOfAFinalClass(): void
+    {
+        $finalMockInterface = Mockery::mock(new FinalDto());
+
+        $this->expectException(MockClassMismatchException::class);
+        $this->expectExceptionMessage(\sprintf('mock is not an instance of class `%s`', FinalDto::class));
+
+        $this->mockContainer->registerMock(FinalDto::class, $finalMockInterface);
+    }
+
+    public function testRegisterMockRejectionLeavesTheContainerUnchanged(): void
+    {
+        $unrelatedMockInterface = Mockery::mock(UnrelatedDto::class);
+
+        try {
+            $this->mockContainer->registerMock(SecondMockDto::class, $unrelatedMockInterface);
+        } catch (MockClassMismatchException) {
+        }
+
+        static::assertFalse($this->mockContainer->hasMock(SecondMockDto::class));
+    }
+
+    public function testRegisterMockAcceptsAMockOfASubclass(): void
+    {
+        $extendedMockInterface = Mockery::mock(ExtendedSecondMockDto::class);
+
+        $this->mockContainer->registerMock(SecondMockDto::class, $extendedMockInterface);
+
+        static::assertSame($extendedMockInterface, $this->mockContainer->getMock(SecondMockDto::class));
+    }
+
+    public function testMockIsNotCreatedUntilFirstGet(): void
+    {
+        $onCreateCallCount = 0;
+
+        $mockDto = new MockDto(
+            SecondMockDto::class,
+            null,
+            false,
+            static function () use (&$onCreateCallCount): void {
+                ++$onCreateCallCount;
+            },
+        );
+
+        $this->mockContainer->registerMockDto($mockDto);
+
+        static::assertSame(0, $onCreateCallCount);
+
+        $this->mockContainer->getMock(SecondMockDto::class);
+
+        static::assertSame(1, $onCreateCallCount);
+
+        $this->mockContainer->getMock(SecondMockDto::class);
+
+        static::assertSame(1, $onCreateCallCount);
+    }
+
+    public function testConstructDependenciesAreNotResolvedUntilFirstGet(): void
+    {
+        $this->mockContainer->registerMockDto(
+            new MockDto(ConstructorTrackingDto::class, [new MockDto(SecondMockDto::class)]),
+        );
+
+        static::assertFalse($this->mockContainer->hasMock(SecondMockDto::class));
+
+        $this->mockContainer->getMock(ConstructorTrackingDto::class);
+
+        static::assertTrue($this->mockContainer->hasMock(SecondMockDto::class));
+    }
+
+    public function testCircularDependencyOfLengthThreeThrowsException(): void
+    {
+        $this->mockContainer->registerMockDto(TripleCircularAlphaMock::getMockDto());
+
+        $this->expectException(CircularDependencyException::class);
+        $this->expectExceptionMessage(
+            \sprintf('circular dependency detected for class `%s`', TripleCircularAlphaMock::class),
+        );
+
+        $this->mockContainer->getMock(TripleCircularAlphaMock::class);
+    }
+
+    public function testCircularDependencyGuardIsClearedForEveryLinkOfTheChain(): void
+    {
+        $this->mockContainer->registerMockDto(TripleCircularAlphaMock::getMockDto());
+
+        try {
+            $this->mockContainer->getMock(TripleCircularAlphaMock::class);
+        } catch (CircularDependencyException) {
+        }
+
+        $this->mockContainer->registerMockDto(TripleCircularBetaMock::getMockDto());
+
+        $this->expectException(CircularDependencyException::class);
+        $this->expectExceptionMessage(
+            \sprintf('circular dependency detected for class `%s`', TripleCircularBetaMock::class),
+        );
+
+        $this->mockContainer->getMock(TripleCircularBetaMock::class);
     }
 }

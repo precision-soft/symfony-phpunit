@@ -10,6 +10,8 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\Container;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Mockery\Exception\BadMethodCallException;
+use Mockery\Exception\InvalidCountException;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
@@ -17,6 +19,7 @@ use PrecisionSoft\Symfony\Phpunit\Mock\EventDispatcherInterfaceMock;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
 use PrecisionSoft\Symfony\Phpunit\Mock\SluggerInterfaceMock;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ConstructorTrackingDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\DeepNestedServiceDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\FirstMockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\MixedConstructorDto;
@@ -299,5 +302,86 @@ final class MockContainerTest extends TestCase
         static::assertInstanceOf(MockInterface::class, $nullableConstructorDto->getSecondMockDto());
         static::assertInstanceOf(SecondMockDto::class, $nullableConstructorDto->getSecondMockDto());
         static::assertSame(42, $nullableConstructorDto->getPriority());
+    }
+
+    public function testNonPartialMockRunsTheOriginalConstructorButStubsEveryMethod(): void
+    {
+        $this->mockContainer->registerMockDto(
+            new MockDto(ConstructorTrackingDto::class, [new MockDto(SecondMockDto::class)]),
+        );
+
+        /** @var MockInterface&ConstructorTrackingDto $constructorTrackingDto */
+        $constructorTrackingDto = $this->mockContainer->getMock(ConstructorTrackingDto::class);
+
+        static::assertTrue($constructorTrackingDto->constructorCalled);
+        static::assertInstanceOf(SecondMockDto::class, $constructorTrackingDto->secondMockDto);
+
+        try {
+            $constructorTrackingDto->describe();
+
+            static::fail('a non-partial mock must reject a method call that carries no expectation');
+        } catch (BadMethodCallException $badMethodCallException) {
+            static::assertStringContainsString('describe', $badMethodCallException->getMessage());
+
+            $badMethodCallException->dismiss();
+        }
+    }
+
+    public function testCloseVerifiesTheExpectationsOfTheMocksItManages(): void
+    {
+        $this->mockContainer->registerMockDto(
+            new MockDto(
+                ConstructorTrackingDto::class,
+                null,
+                false,
+                static function (MockInterface $mockInterface): void {
+                    $mockInterface->shouldReceive('describe')
+                        ->once();
+                },
+            ),
+        );
+
+        $this->mockContainer->getMock(ConstructorTrackingDto::class);
+
+        try {
+            $this->mockContainer->close();
+
+            static::fail('close() must verify the expectations of the mocks it manages');
+        } catch (InvalidCountException $invalidCountException) {
+            static::assertStringContainsString('describe', $invalidCountException->getMessage());
+        }
+    }
+
+    public function testPartialMockRunsTheOriginalMethodImplementation(): void
+    {
+        $this->mockContainer->registerMockDto(
+            new MockDto(ConstructorTrackingDto::class, [new MockDto(SecondMockDto::class)], true),
+        );
+
+        /** @var MockInterface&ConstructorTrackingDto $constructorTrackingDto */
+        $constructorTrackingDto = $this->mockContainer->getMock(ConstructorTrackingDto::class);
+
+        static::assertTrue($constructorTrackingDto->constructorCalled);
+        static::assertSame('original implementation', $constructorTrackingDto->describe());
+    }
+
+    public function testPartialMockStillHonoursAStubbedMethod(): void
+    {
+        $this->mockContainer->registerMockDto(
+            new MockDto(
+                ConstructorTrackingDto::class,
+                [new MockDto(SecondMockDto::class)],
+                true,
+                static function (MockInterface $mockInterface): void {
+                    $mockInterface->shouldReceive('describe')
+                        ->andReturn('stubbed implementation');
+                },
+            ),
+        );
+
+        /** @var MockInterface&ConstructorTrackingDto $constructorTrackingDto */
+        $constructorTrackingDto = $this->mockContainer->getMock(ConstructorTrackingDto::class);
+
+        static::assertSame('stubbed implementation', $constructorTrackingDto->describe());
     }
 }

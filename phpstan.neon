@@ -1,5 +1,4 @@
 includes:
-    - phpstan-baseline.neon
     - vendor/phpstan/phpstan-mockery/extension.neon
 
 parameters:
@@ -7,5 +6,14 @@ parameters:
     paths:
         - src/
         - tests/
-    scanDirectories:
-        - vendor/bin/.phpunit/
+    ignoreErrors:
+        # `method_exists(static::class, 'getMockDto')` is uncertain for a consumer using the trait standalone
+        -
+            identifier: function.alreadyNarrowedType
+            path: src/TestCase/Trait/MockContainerTrait.php
+        -
+            # a `class-string` here would make the `getReference()` rejection branch under test unreachable
+            identifier: argument.type
+            path: tests/Mock/ManagerRegistryMockTest.php
+            message: '#^Parameter \#1 \$entityName of method Doctrine\\ORM\\EntityManagerInterface\:\:getReference\(\) expects class\-string#'
+            count: 1

@@ -16,6 +16,8 @@ use PrecisionSoft\Symfony\Phpunit\TestCase\Trait\MockContainerTrait;
 class MockContainerTraitTearDownTestCase extends TestCase implements MockDtoInterface
 {
     use MockContainerTrait {
+        get as public;
+        registerMockDto as public;
         tearDown as public traitTearDown;
     }
 

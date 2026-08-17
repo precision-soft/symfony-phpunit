@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Test\TestCase;
 
+use Mockery;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Mock\EventDispatcherInterfaceMock;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
@@ -48,5 +49,23 @@ final class AbstractTestCaseTest extends AbstractTestCase
         $result = $this->registerMockDto(EventDispatcherInterfaceMock::getMockDto());
 
         static::assertSame($this, $result);
+    }
+
+    public function testRegisterMockAcceptsAPreBuiltMockFromASubclass(): void
+    {
+        $eventDispatcherInterfaceMock = Mockery::mock(EventDispatcherInterface::class);
+
+        $result = $this->registerMock(EventDispatcherInterface::class, $eventDispatcherInterfaceMock);
+
+        static::assertSame($this, $result);
+        static::assertSame($eventDispatcherInterfaceMock, $this->get(EventDispatcherInterface::class));
+    }
+
+    public function testInitializeMockContainerReturnsTheContainerSetUpAlreadyBuilt(): void
+    {
+        $mockContainer = $this->initializeMockContainer();
+
+        static::assertSame($mockContainer, $this->initializeMockContainer());
+        static::assertTrue($mockContainer->hasMock(SecondMockDto::class));
     }
 }

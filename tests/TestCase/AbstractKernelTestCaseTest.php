@@ -72,6 +72,17 @@ final class AbstractKernelTestCaseTest extends AbstractKernelTestCase
         static::assertSame($firstMockInterface, $secondMockInterface);
     }
 
+    public function testTearDownShutsTheBootedKernelDown(): void
+    {
+        static::bootKernel();
+
+        static::assertTrue(static::$booted);
+
+        $this->tearDown();
+
+        static::assertFalse(static::$booted);
+    }
+
     public function testImplementsMockDtoInterface(): void
     {
         static::assertInstanceOf(

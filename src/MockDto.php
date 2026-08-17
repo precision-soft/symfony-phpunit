@@ -9,17 +9,15 @@ declare(strict_types=1);
 namespace PrecisionSoft\Symfony\Phpunit;
 
 use Closure;
-use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
 
 class MockDto
 {
     /**
      * @param class-string $class
-     * @param list<MockDto|MockDtoInterface|class-string<MockDtoInterface>|scalar>|null $construct Scalar values in
-     *        $construct are passed as-is to Mockery; ensure they match the target class constructor
-     *        parameter types.
-     * @throws ClassNotFoundException if $class does not reference an existing class or interface
+     * @param list<mixed>|null $construct constructor arguments in order; a nested `MockDto`, a `MockDtoInterface`
+     *        and a `class-string<MockDtoInterface>` are resolved into mocks, every other entry is passed through
+     * @throws ClassNotFoundException
      */
     public function __construct(
         protected readonly string $class,
@@ -38,7 +36,7 @@ class MockDto
         return $this->class;
     }
 
-    /** @return list<MockDto|MockDtoInterface|class-string<MockDtoInterface>|scalar>|null */
+    /** @return list<mixed>|null */
     public function getConstruct(): ?array
     {
         return $this->construct;

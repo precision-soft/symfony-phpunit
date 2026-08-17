@@ -47,9 +47,6 @@ class ManagerRegistryMock implements MockDtoInterface
     }
 
     /**
-     * Restricts `getManagerForClass()` on the given mock to return the entity manager only for the listed entity
-     * classes, `null` otherwise. Configuration is per-mock (no static state), safe for parallel test execution.
-     *
      * @param MockInterface&ManagerRegistry $managerRegistryMock
      * @param list<class-string> $entityClasses
      */
@@ -263,7 +260,6 @@ class ManagerRegistryMock implements MockDtoInterface
                     $reflectionMethod = $reflectionClass->getConstructor();
 
                     if (null !== $reflectionMethod && 0 < $reflectionMethod->getNumberOfRequiredParameters()) {
-                        /** @info entities with readonly constructor-promoted properties will be in an invalid state — acceptable for test references used only as identity markers */
                         $entity = $reflectionClass->newInstanceWithoutConstructor();
                     } else {
                         $entity = new $entityName();
