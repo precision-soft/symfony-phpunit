@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `CONTRIBUTING.md` — the *Verification* section now documents [`.dev/validate/all.sh`](./.dev/validate/all.sh) and its four flags, replacing a description of the pre-commit hook that had been stale since the hook became a thin caller of that script. Two sections were added to carry the rationale that used to live in comments: *Development toolchain* (the pinned pcov and infection builds, the `php.dev.ini` overlay, the mutation thresholds) and *Continuous integration* (the three jobs, and why `--fail-on-skipped` is passed in CI only). Brings this package in line with the rest of the portfolio; no code changed
+
 ## [v3.5.0] - 2026-08-17 - Cold-start gate, mock class validation and a real end-to-end harness
 
 ### Fixed
