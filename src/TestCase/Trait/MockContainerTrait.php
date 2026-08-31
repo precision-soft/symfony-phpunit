@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\TestCase\Trait;
 
+use Closure;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
@@ -49,6 +50,19 @@ trait MockContainerTrait
         $this->initializeMockContainer()->registerMock($class, $mockInterface);
 
         return $this;
+    }
+
+    /**
+     * @template T of object
+     * @template R
+     * @param class-string<T> $class
+     * @param MockInterface&T $mockInterface
+     * @param Closure(MockInterface&T, MockContainer): R $callback
+     * @return R
+     */
+    protected function withMock(string $class, MockInterface $mockInterface, Closure $callback): mixed
+    {
+        return $this->initializeMockContainer()->withMock($class, $mockInterface, $callback);
     }
 
     protected function initializeMockContainer(): MockContainer

@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace PrecisionSoft\Symfony\Phpunit\Container;
 
+use Closure;
 use Mockery;
 use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
@@ -77,17 +78,7 @@ class MockContainer
      */
     public function registerMock(string $class, MockInterface $mockInterface): static
     {
-        if (false === $mockInterface instanceof $class) {
-            throw new MockClassMismatchException(
-                \sprintf('mock is not an instance of class `%s`', $class),
-                0,
-                null,
-                [
-                    'expectedClass' => $class,
-                    'actualClass' => $mockInterface::class,
-                ],
-            );
-        }
+        $this->assertMockClass($class, $mockInterface);
 
         if (true === isset($this->mocks[$class])) {
             throw new MockAlreadyRegisteredException(
@@ -116,6 +107,40 @@ class MockContainer
     public function hasMock(string $class): bool
     {
         return true === isset($this->mocks[$class]) || true === isset($this->mockDtos[$class]);
+    }
+
+    /**
+     * @template T of object
+     * @template R
+     * @param class-string<T> $class
+     * @param MockInterface&T $mockInterface
+     * @param Closure(MockInterface&T, static): R $callback
+     * @return R
+     * @throws MockClassMismatchException
+     */
+    public function withMock(string $class, MockInterface $mockInterface, Closure $callback): mixed
+    {
+        $this->assertMockClass($class, $mockInterface);
+
+        $previousMock = $this->mocks[$class] ?? null;
+        $previousMockDto = $this->mockDtos[$class] ?? null;
+
+        $this->mocks[$class] = $mockInterface;
+        unset($this->mockDtos[$class]);
+
+        try {
+            return $callback($mockInterface, $this);
+        } finally {
+            unset($this->mocks[$class]);
+
+            if (null !== $previousMock) {
+                $this->mocks[$class] = $previousMock;
+            }
+
+            if (null !== $previousMockDto) {
+                $this->mockDtos[$class] = $previousMockDto;
+            }
+        }
     }
 
     public function close(): void
@@ -200,5 +225,26 @@ class MockContainer
         } finally {
             unset($this->creating[$mockDto->getClass()]);
         }
+    }
+
+    /**
+     * @param class-string $class
+     * @throws MockClassMismatchException
+     */
+    protected function assertMockClass(string $class, MockInterface $mockInterface): void
+    {
+        if (true === $mockInterface instanceof $class) {
+            return;
+        }
+
+        throw new MockClassMismatchException(
+            \sprintf('mock is not an instance of class `%s`', $class),
+            0,
+            null,
+            [
+                'expectedClass' => $class,
+                'actualClass' => $mockInterface::class,
+            ],
+        );
     }
 }

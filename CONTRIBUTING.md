@@ -56,11 +56,11 @@ Mutation thresholds live in [`infection.json5`](./infection.json5) (`minMsi`, `m
 
 ### Continuous integration
 
-[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) cannot call `.dev/validate/all.sh` — the script needs Docker and a compose project — so it runs the same composer scripts natively across a PHP version matrix instead. Three jobs: `static` (out of the matrix, since `cs-check` reads the same bytes on every interpreter), `test` (`phpstan` and the suite on 8.2, 8.3 and 8.4, because phpstan's inference follows the interpreter) and `audit`.
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) cannot call `.dev/validate/all.sh` — the script needs Docker and a compose project — so it runs the same composer scripts natively across a PHP version matrix instead. Four jobs: `static` (out of the matrix, since `cs-check` reads the same bytes on every interpreter), `test` (`phpstan` and the suite on PHP 8.2 through 8.5, because phpstan's inference follows the interpreter), `symfony-latest` (resolves the highest allowed Symfony set on PHP 8.5) and `audit` (`composer audit --locked` reads `composer.lock`, so the job needs neither `vendor/` nor an install step; it stays out of `composer check` because it is the only section that needs the network).
 
 CI passes `--fail-on-skipped`, which is deliberately not in `phpunit.xml.dist`: locally a test whose precondition is absent is a skip, so `composer check` stays fast and offline, while in CI a silently skipped test must fail instead of printing a screen of green skips.
 
-Every job installs the locked dependencies and never resolves its own, so the analysers certify the code against the versions this repository ships. The `vendor/bin/.phpunit` cache step comes *after* the install, because `simple-phpunit` builds a tree `composer.lock` does not describe and composer owns `vendor/`, so it would clean a pre-restored directory back out.
+Every job except `symfony-latest` installs the locked dependencies. `composer.lock` stays reproducible on the baseline dependency set, so the other lanes certify the code against the versions this repository ships, while `symfony-latest` deliberately resolves the upper bound and is the only place the `^8.0` half of the Symfony constraints is exercised. It stays blocking on purpose: an upstream release that breaks this package has to be visible on the next run, not on the next release. The `vendor/bin/.phpunit` cache step comes *after* the install, because `simple-phpunit` builds a tree `composer.lock` does not describe and composer owns `vendor/`, so it would clean a pre-restored directory back out.
 
 ## Development workflow
 

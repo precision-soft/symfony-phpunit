@@ -16,7 +16,7 @@ Any suggestions are welcomed.
 
 - PHP >= 8.2
 - Mockery 1.*
-- Symfony PHPUnit Bridge 7.*
+- Symfony PHPUnit Bridge 7.* or 8.*
 
 ## Installation
 
@@ -85,12 +85,13 @@ class FooRepositoryMock implements MockDtoInterface
 
 **Methods:**
 
-| Method                                             | Description                                              |
-|----------------------------------------------------|----------------------------------------------------------|
-| `registerMockDto(MockDto $mockDto): self`          | Register a mock configuration                            |
-| `getMock(string $class): MockInterface`            | Get (or lazily create) a mock by class name              |
-| `registerMock(string $class, MockInterface): self` | Register a pre-built mock directly                       |
-| `close(): void`                                    | Clear all registered mock DTOs and cached mock instances |
+| Method                                                   | Description                                                             |
+|----------------------------------------------------------|-------------------------------------------------------------------------|
+| `registerMockDto(MockDto $mockDto): self`                | Register a mock configuration                                           |
+| `getMock(string $class): MockInterface`                  | Get (or lazily create) a mock by class name                             |
+| `registerMock(string $class, MockInterface): self`       | Register a pre-built mock directly                                      |
+| `withMock(string $class, MockInterface, Closure): mixed` | Install a scoped override, restore the previous registration afterwards |
+| `close(): void`                                          | Clear all registered mock DTOs and cached mock instances                |
 
 ## Usage
 
@@ -196,7 +197,7 @@ abstract class CustomTestCase extends TestCase implements MockDtoInterface
 }
 ```
 
-The trait provides `setUp()` (registers the mock from `getMockDto()`), `tearDown()` (closes the container), `get()`, `registerMockDto()`, and `registerMock()`.
+The trait provides `setUp()` (registers the mock from `getMockDto()`), `tearDown()` (closes the container), `get()`, `registerMockDto()`, `registerMock()`, and `withMock()`.
 
 ### Extending AbstractTestCase
 
@@ -360,8 +361,8 @@ final class CreateServiceTest extends AbstractTestCase
 
     public function testCreate(): void
     {
-        $registry = $this->getMock(ManagerRegistry::class);
-        ManagerRegistryMock::configureManagedEntityClasses($registry, [Customer::class]);
+        $managerRegistry = $this->get(ManagerRegistry::class);
+        ManagerRegistryMock::configureManagedEntityClasses($managerRegistry, [Customer::class]);
 
         /** no reset needed — state lives on the mock, not the class */
     }
@@ -369,6 +370,25 @@ final class CreateServiceTest extends AbstractTestCase
 ```
 
 > The static `setManagedEntityClasses()` / `resetManagedEntityClasses()` helpers (and `ManagerRegistryMockTrait`'s `#[After]` hook) remain available for backward compatibility but are deprecated since 3.3.0 and will be removed in 4.0.0.
+
+When repository or metadata behavior differs per entity, configure a factory on the entity manager mock. Both factories run lazily and cache one double per entity class, so repeated calls for the same entity return the same instance:
+
+```php
+$entityManager = $this->get(ManagerRegistry::class)->getManager();
+
+ManagerRegistryMock::configureRepositoryFactory(
+    $entityManager,
+    static function (string $entityClass): MockInterface {
+        $repositoryMockInterface = Mockery::mock(EntityRepository::class);
+        $repositoryMockInterface->shouldReceive('findAll')
+            ->andReturn(Customer::class === $entityClass ? [new Customer()] : []);
+
+        return $repositoryMockInterface;
+    },
+);
+```
+
+`configureClassMetadataFactory()` works the same way for `getClassMetadata()`. A factory that returns anything other than a Mockery double of `EntityRepository` (respectively `ClassMetadata`) is rejected with a `MockClassMismatchException` naming the entity class.
 
 - **`EventDispatcherInterfaceMock`** -- Mocks `EventDispatcherInterface` with a `dispatch()` that returns the dispatched event.
 - **`SluggerInterfaceMock`** -- Mocks `SluggerInterface` with a `slug()` that returns a `UnicodeString` containing the input string.
@@ -415,18 +435,44 @@ public function testFoo(): void
 }
 ```
 
+### Overriding a Mock for Part of a Test
+
+`withMock()` installs a mock for the duration of a callback and restores whatever was registered before — a mock instance, an unmaterialised `MockDto`, or nothing at all. The restore runs in a `finally`, so it also happens when the callback throws:
+
+```php
+use Mockery;
+
+public function testFallbackPath(): void
+{
+    $failingMockInterface = Mockery::mock(BarService::class);
+    $failingMockInterface->shouldReceive('process')->andThrow(new BarServiceUnavailableException());
+
+    $fallbackResult = $this->withMock(
+        BarService::class,
+        $failingMockInterface,
+        fn(): string => $this->get(FooService::class)->run(),
+    );
+
+    static::assertSame('fallback', $fallbackResult);
+
+    /** the original BarService mock is back in the container here */
+}
+```
+
+The callback receives the override and the container, and `withMock()` returns whatever the callback returns. A mock that is not an instance of `$class` is rejected with `MockClassMismatchException`, exactly as in `registerMock()`.
+
 ### Exceptions
 
 All exceptions are in the `PrecisionSoft\Symfony\Phpunit\Exception` namespace:
 
-| Exception                              | Thrown when                                                                                                                                                                           |
-|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `CircularDependencyException`          | `MockContainer::createMock()` detects that a mock's constructor dependency graph contains a cycle (class A depends on B which depends back on A).                                     |
-| `ClassNotFoundException`               | `MockContainer::getOrRegisterMock()` is called with a `MockDto` whose class string does not exist, or `EntityManagerInterface::getReference()` is called with a non-existent class.   |
-| `MockAlreadyRegisteredException`       | `MockContainer::registerMockDto()` or `MockContainer::registerMock()` is called for a class that already has a registered DTO or mock instance.                                       |
-| `MockClassMismatchException`           | `MockContainer::registerMock()` is called with a mock that is not an instance of the class it is registered under, which would make `getMock()` break its `MockInterface&T` contract. |
-| `MockNotFoundException`                | `MockContainer::getMock()` is called for a class that has no registered `MockDto`.                                                                                                    |
-| `MockContainerNotInitializedException` | A `MockContainerTrait` method (e.g. `get()`) is called before `setUp()` has initialised the container.                                                                                |
+| Exception                              | Thrown when                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CircularDependencyException`          | `MockContainer::createMock()` detects that a mock's constructor dependency graph contains a cycle (class A depends on B which depends back on A).                                                                                                                                                                                                                                                                             |
+| `ClassNotFoundException`               | `MockContainer::getOrRegisterMock()` is called with a `MockDto` whose class string does not exist, or `EntityManagerInterface::getReference()` is called with a non-existent class.                                                                                                                                                                                                                                           |
+| `MockAlreadyRegisteredException`       | `MockContainer::registerMockDto()` or `MockContainer::registerMock()` is called for a class that already has a registered DTO or mock instance.                                                                                                                                                                                                                                                                               |
+| `MockClassMismatchException`           | `MockContainer::registerMock()` or `MockContainer::withMock()` is called with a mock that is not an instance of the class it is registered under, which would make `getMock()` break its `MockInterface&T` contract. Also thrown by `ManagerRegistryMock::configureRepositoryFactory()` and `configureClassMetadataFactory()` when the supplied factory returns something that is not a Mockery double of the expected class. |
+| `MockNotFoundException`                | `MockContainer::getMock()` is called for a class that has no registered `MockDto`.                                                                                                                                                                                                                                                                                                                                            |
+| `MockContainerNotInitializedException` | A `MockContainerTrait` method (e.g. `get()`) is called before `setUp()` has initialised the container.                                                                                                                                                                                                                                                                                                                        |
 
 ## Test Conventions
 

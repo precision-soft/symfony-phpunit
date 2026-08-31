@@ -13,7 +13,9 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\Exception\InvalidCountException;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
+use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockContainerNotInitializedException;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\ConstructorTrackingDto;
 use PrecisionSoft\Symfony\Phpunit\Test\Utility\MockContainerTraitTearDownTestCase;
@@ -140,5 +142,50 @@ final class MockContainerTraitTest extends TestCase
         $retrievedMockInterface = $mockContainerTraitTestCase->get(SecondMockDto::class);
 
         static::assertSame($externalMockInterface, $retrievedMockInterface);
+    }
+
+    public function testWithMockScopesTheOverrideAndRestoresThePreviousMock(): void
+    {
+        $mockContainerTraitTestCase = new MockContainerTraitTestCase();
+
+        $mockContainerTraitTestCase->registerMockDto(new MockDto(SecondMockDto::class));
+        $originalMockInterface = $mockContainerTraitTestCase->get(SecondMockDto::class);
+        $overrideMockInterface = Mockery::mock(SecondMockDto::class);
+
+        $callbackResult = $mockContainerTraitTestCase->withMock(
+            SecondMockDto::class,
+            $overrideMockInterface,
+            static function (
+                MockInterface $scopedMockInterface,
+                MockContainer $scopedMockContainer,
+            ) use ($overrideMockInterface): string {
+                static::assertSame($overrideMockInterface, $scopedMockInterface);
+                static::assertSame($overrideMockInterface, $scopedMockContainer->getMock(SecondMockDto::class));
+
+                return 'callback result';
+            },
+        );
+
+        static::assertSame('callback result', $callbackResult);
+        static::assertSame($originalMockInterface, $mockContainerTraitTestCase->get(SecondMockDto::class));
+    }
+
+    public function testWithMockInitializesContainerOnFirstCall(): void
+    {
+        $mockContainerTraitTestCase = new MockContainerTraitTestCase();
+
+        $overrideMockInterface = Mockery::mock(SecondMockDto::class);
+
+        $scopedMockInterface = $mockContainerTraitTestCase->withMock(
+            SecondMockDto::class,
+            $overrideMockInterface,
+            static fn(MockInterface $mockInterface): MockInterface => $mockInterface,
+        );
+
+        static::assertSame($overrideMockInterface, $scopedMockInterface);
+
+        $this->expectException(MockNotFoundException::class);
+
+        $mockContainerTraitTestCase->get(SecondMockDto::class);
     }
 }

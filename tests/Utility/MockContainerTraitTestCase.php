@@ -19,6 +19,7 @@ class MockContainerTraitTestCase extends TestCase implements MockDtoInterface
         get as public;
         registerMockDto as public;
         registerMock as public;
+        withMock as public;
     }
 
     /** @phpstan-ignore method.parentMethodFinalByPhpDoc */

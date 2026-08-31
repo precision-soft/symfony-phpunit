@@ -24,6 +24,7 @@ use Mockery\MockInterface;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Contract\MockDtoInterface;
 use PrecisionSoft\Symfony\Phpunit\Exception\ClassNotFoundException;
+use PrecisionSoft\Symfony\Phpunit\Exception\MockClassMismatchException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
 use ReflectionClass;
 use stdClass;
@@ -95,6 +96,24 @@ class ManagerRegistryMock implements MockDtoInterface
         static::$managedEntityClasses = [];
     }
 
+    /**
+     * @param MockInterface&EntityManagerInterface $entityManagerMock
+     * @param Closure(string): (MockInterface&EntityRepository<object>) $factory
+     */
+    public static function configureRepositoryFactory(MockInterface $entityManagerMock, Closure $factory): void
+    {
+        static::configureCachedFactory($entityManagerMock, 'getRepository', EntityRepository::class, $factory);
+    }
+
+    /**
+     * @param MockInterface&EntityManagerInterface $entityManagerMock
+     * @param Closure(string): (MockInterface&ClassMetadata<object>) $factory
+     */
+    public static function configureClassMetadataFactory(MockInterface $entityManagerMock, Closure $factory): void
+    {
+        static::configureCachedFactory($entityManagerMock, 'getClassMetadata', ClassMetadata::class, $factory);
+    }
+
     public static function getOnCreate(): Closure
     {
         return static function (MockInterface $mockInterface, MockContainer $mockContainer): void {
@@ -153,6 +172,54 @@ class ManagerRegistryMock implements MockDtoInterface
                 ->byDefault()
                 ->andReturn($connectionMock);
         };
+    }
+
+    /**
+     * @param MockInterface&EntityManagerInterface $entityManagerMock
+     * @param class-string $expectedClass
+     * @param Closure(string): mixed $factory
+     */
+    protected static function configureCachedFactory(
+        MockInterface $entityManagerMock,
+        string $methodName,
+        string $expectedClass,
+        Closure $factory,
+    ): void {
+        /** @var array<string, MockInterface> $mocksByEntityClass */
+        $mocksByEntityClass = [];
+
+        $entityManagerMock->shouldReceive($methodName)
+            ->andReturnUsing(
+                static function (string $entityClass) use (
+                    &$mocksByEntityClass,
+                    $expectedClass,
+                    $factory,
+                ): MockInterface {
+                    if (true === isset($mocksByEntityClass[$entityClass])) {
+                        return $mocksByEntityClass[$entityClass];
+                    }
+
+                    $mockInterface = $factory($entityClass);
+
+                    if (
+                        false === $mockInterface instanceof MockInterface
+                        || false === $mockInterface instanceof $expectedClass
+                    ) {
+                        throw new MockClassMismatchException(
+                            \sprintf('factory must return a mock of class `%s`', $expectedClass),
+                            0,
+                            null,
+                            [
+                                'entityClass' => $entityClass,
+                                'expectedClass' => $expectedClass,
+                                'actualClass' => \get_debug_type($mockInterface),
+                            ],
+                        );
+                    }
+
+                    return $mocksByEntityClass[$entityClass] = $mockInterface;
+                },
+            );
     }
 
     protected static function getEntityManagerMock(MockContainer $mockContainer): MockInterface

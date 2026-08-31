@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v3.6.0] - 2026-08-31 - Scoped mock overrides, per-entity Doctrine factories and Symfony 8 support
+
+### Added
+
+- `ManagerRegistryMock::configureRepositoryFactory()` and `configureClassMetadataFactory()` provide lazy, per-entity, cached doubles without replacing Mockery expectations by hand. A factory that returns anything other than a Mockery double of the expected class is rejected with `MockClassMismatchException` carrying the entity class, the expected class and the actual type.
+- `MockContainer::withMock()` installs a scoped override and restores the previous mock, the previous unmaterialised `MockDto`, or nothing at all in `finally`, including when the callback throws. `MockContainerTrait::withMock()` proxies it, so `AbstractTestCase` subclasses reach it the same way they reach `registerMock()`.
+
 ### Changed
 
-- `CONTRIBUTING.md` — the *Verification* section now documents [`.dev/validate/all.sh`](./.dev/validate/all.sh) and its four flags, replacing a description of the pre-commit hook that had been stale since the hook became a thin caller of that script. Two sections were added to carry the rationale that used to live in comments: *Development toolchain* (the pinned pcov and infection builds, the `php.dev.ini` overlay, the mutation thresholds) and *Continuous integration* (the three jobs, and why `--fail-on-skipped` is passed in CI only). Brings this package in line with the rest of the portfolio; no code changed
+- Symfony component constraints now accept 7.x and 8.x; CI covers PHP 8.5 and the latest allowed Symfony set.
+- `CONTRIBUTING.md` — the *Verification* section now documents [`.dev/validate/all.sh`](./.dev/validate/all.sh) and its four flags, replacing a description of the pre-commit hook that had been stale since the hook became a thin caller of that script. Two sections were added to carry the rationale that used to live in comments: *Development toolchain* (the pinned pcov and infection builds, the `php.dev.ini` overlay, the mutation thresholds) and *Continuous integration* (the CI jobs, and why `--fail-on-skipped` is passed in CI only). Brings this package in line with the rest of the portfolio; no code changed
 
 ## [v3.5.0] - 2026-08-17 - Cold-start gate, mock class validation and a real end-to-end harness
 
@@ -454,7 +462,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 - Dev infrastructure (Docker compose, pre-commit hook, utility scripts) under `dev/`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.5.0...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.6.0...HEAD
+
+[v3.6.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.5.0...v3.6.0
 
 [v3.5.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.4.4...v3.5.0
 
