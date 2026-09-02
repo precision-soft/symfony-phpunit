@@ -34,21 +34,6 @@ final class ManagerRegistryMockFactoryTest extends TestCase
 
     private MockContainer $mockContainer;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
-
     public function testRepositoryFactoryIsLazyScopedAndCachedPerEntity(): void
     {
         $entityManagerMock = $this->getEntityManagerMock();
@@ -142,12 +127,82 @@ final class ManagerRegistryMockFactoryTest extends TestCase
 
         ManagerRegistryMock::configureClassMetadataFactory($entityManagerMock, $classMetadataFactory);
 
-        $this->expectException(MockClassMismatchException::class);
-        $this->expectExceptionMessage(
+        $caughtException = null;
+
+        try {
+            $entityManagerMock->getClassMetadata(stdClass::class);
+        } catch (MockClassMismatchException $exception) {
+            $caughtException = $exception;
+        }
+
+        static::assertInstanceOf(MockClassMismatchException::class, $caughtException);
+        static::assertSame(
             \sprintf('factory must return a mock of class `%s`', ClassMetadata::class),
+            $caughtException->getMessage(),
         );
 
-        $entityManagerMock->getClassMetadata(stdClass::class);
+        $context = $caughtException->getContext();
+
+        static::assertSame(stdClass::class, $context['entityClass']);
+        static::assertSame(ClassMetadata::class, $context['expectedClass']);
+        static::assertIsString($context['actualClass']);
+        static::assertStringContainsString('ArrayObject', $context['actualClass']);
+    }
+
+    public function testReconfiguringTheRepositoryFactoryReplacesThePreviousOne(): void
+    {
+        $entityManagerMock = $this->getEntityManagerMock();
+        $firstRepositoryMockInterface = Mockery::mock(EntityRepository::class);
+        $secondRepositoryMockInterface = Mockery::mock(EntityRepository::class);
+
+        /** @var Closure(string): (MockInterface&EntityRepository<object>) $firstRepositoryFactory */
+        $firstRepositoryFactory = static fn(string $entityClass): MockInterface => $firstRepositoryMockInterface;
+        /** @var Closure(string): (MockInterface&EntityRepository<object>) $secondRepositoryFactory */
+        $secondRepositoryFactory = static fn(string $entityClass): MockInterface => $secondRepositoryMockInterface;
+
+        ManagerRegistryMock::configureRepositoryFactory($entityManagerMock, $firstRepositoryFactory);
+
+        static::assertSame($firstRepositoryMockInterface, $entityManagerMock->getRepository(stdClass::class));
+
+        ManagerRegistryMock::configureRepositoryFactory($entityManagerMock, $secondRepositoryFactory);
+
+        static::assertSame($secondRepositoryMockInterface, $entityManagerMock->getRepository(stdClass::class));
+    }
+
+    public function testAnExplicitExpectationOverridesTheRepositoryFactory(): void
+    {
+        $entityManagerMock = $this->getEntityManagerMock();
+        $explicitRepositoryMockInterface = Mockery::mock(EntityRepository::class);
+
+        /** @var Closure(string): (MockInterface&EntityRepository<object>) $repositoryFactory */
+        $repositoryFactory = static fn(string $entityClass): MockInterface => Mockery::mock(EntityRepository::class);
+
+        ManagerRegistryMock::configureRepositoryFactory($entityManagerMock, $repositoryFactory);
+
+        $entityManagerMock->shouldReceive('getRepository')
+            ->with(stdClass::class)
+            ->andReturn($explicitRepositoryMockInterface);
+
+        static::assertSame($explicitRepositoryMockInterface, $entityManagerMock->getRepository(stdClass::class));
+        static::assertNotSame(
+            $explicitRepositoryMockInterface,
+            $entityManagerMock->getRepository(EntityWithSetId::class),
+        );
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 
     /** @return EntityManagerInterface&MockInterface */

@@ -22,7 +22,7 @@
         "symfony/string": "^7.0 || ^8.0"
     },
     "require-dev": {
-        "doctrine/doctrine-bundle": "^2.0",
+        "doctrine/doctrine-bundle": "^2.0 || ^3.0",
         "doctrine/orm": "^3.0",
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan": "^2.0",
@@ -37,6 +37,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "PrecisionSoft\\Dev\\PhpStan\\": ".dev/phpstan/",
             "PrecisionSoft\\Symfony\\Phpunit\\Test\\": "tests/"
         }
     },
@@ -70,6 +71,9 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
+        "platform": {
+            "php": "8.2"
+        },
         "sort-packages": true
     }
 }

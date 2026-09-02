@@ -38,20 +38,6 @@ final class MockContainerEdgeCaseTest extends TestCase
 
     private MockContainer $mockContainer;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
-
     public function testRegisterMockDtoThrowsExceptionOnDuplicate(): void
     {
         $mockDto = new MockDto(SecondMockDto::class);
@@ -420,5 +406,19 @@ final class MockContainerEdgeCaseTest extends TestCase
         );
 
         $this->mockContainer->getMock(TripleCircularBetaMock::class);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }

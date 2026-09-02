@@ -39,20 +39,6 @@ final class MockContainerTest extends TestCase
 
     private MockContainer $mockContainer;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
-
     public function testPartialMockWithConstructDependenciesResolvesCorrectly(): void
     {
         $mockDto = new MockDto(
@@ -383,5 +369,19 @@ final class MockContainerTest extends TestCase
         $constructorTrackingDto = $this->mockContainer->getMock(ConstructorTrackingDto::class);
 
         static::assertSame('stubbed implementation', $constructorTrackingDto->describe());
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }

@@ -17,6 +17,9 @@ use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Exception\Exception;
 use PrecisionSoft\Symfony\Phpunit\Exception\MockClassMismatchException;
 use PrecisionSoft\Symfony\Phpunit\MockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ConstructorTrackingDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\SecondMockDto;
+use PrecisionSoft\Symfony\Phpunit\Test\Utility\ThirdMockDto;
 use stdClass;
 
 /**
@@ -27,20 +30,6 @@ final class MockContainerScopedOverrideTest extends TestCase
     use MockeryPHPUnitIntegration;
 
     private MockContainer $mockContainer;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
 
     public function testOverrideIsVisibleOnlyInsideTheCallback(): void
     {
@@ -134,5 +123,100 @@ final class MockContainerScopedOverrideTest extends TestCase
             Mockery::mock(ArrayObject::class),
             static fn(): null => null,
         );
+    }
+
+    public function testTheScopeLeavesTheRegistryExactlyAsItFoundIt(): void
+    {
+        $this->mockContainer->registerMockDto(
+            new MockDto(ConstructorTrackingDto::class, [ThirdMockDto::class], true),
+        );
+        $overrideMockInterface = Mockery::mock(SecondMockDto::class);
+
+        $scopedConstructorTrackingDto = $this->mockContainer->withMock(
+            SecondMockDto::class,
+            $overrideMockInterface,
+            static function (
+                MockInterface $scopedMockInterface,
+                MockContainer $scopedMockContainer,
+            ): ConstructorTrackingDto {
+                $scopedMockContainer->registerMockDto(new MockDto(stdClass::class));
+
+                return $scopedMockContainer->getMock(ConstructorTrackingDto::class);
+            },
+        );
+
+        static::assertSame($overrideMockInterface, $scopedConstructorTrackingDto->secondMockDto);
+        static::assertFalse($this->mockContainer->hasMock(stdClass::class));
+        static::assertFalse($this->mockContainer->hasMock(SecondMockDto::class));
+        static::assertTrue($this->mockContainer->hasMock(ConstructorTrackingDto::class));
+
+        $constructorTrackingDto = $this->mockContainer->getMock(ConstructorTrackingDto::class);
+
+        static::assertNotSame($scopedConstructorTrackingDto, $constructorTrackingDto);
+        static::assertNotSame($overrideMockInterface, $constructorTrackingDto->secondMockDto);
+        static::assertSame($this->mockContainer->getMock(SecondMockDto::class), $constructorTrackingDto->secondMockDto);
+    }
+
+    public function testCloseInsideTheScopeDoesNotResurrectAnything(): void
+    {
+        $this->mockContainer->registerMockDto(new MockDto(stdClass::class));
+        $this->mockContainer->getMock(stdClass::class);
+
+        $this->mockContainer->withMock(
+            stdClass::class,
+            Mockery::mock(stdClass::class),
+            static function (MockInterface $scopedMockInterface, MockContainer $scopedMockContainer): void {
+                $scopedMockContainer->close();
+            },
+        );
+
+        static::assertFalse($this->mockContainer->hasMock(stdClass::class));
+    }
+
+    public function testWithMockInsideOnCreateRestoresTheMockBeingCreated(): void
+    {
+        $seenInsideTheScope = null;
+
+        $this->mockContainer->registerMockDto(
+            new MockDto(
+                SecondMockDto::class,
+                null,
+                false,
+                static function (MockInterface $mockInterface, MockContainer $mockContainer) use (
+                    &$seenInsideTheScope,
+                ): void {
+                    $mockContainer->withMock(
+                        SecondMockDto::class,
+                        Mockery::mock(SecondMockDto::class),
+                        static function (
+                            MockInterface $scopedMockInterface,
+                            MockContainer $scopedMockContainer,
+                        ) use (&$seenInsideTheScope): void {
+                            $seenInsideTheScope = $scopedMockContainer->getMock(SecondMockDto::class);
+                        },
+                    );
+                },
+            ),
+        );
+
+        $secondMockDto = $this->mockContainer->getMock(SecondMockDto::class);
+
+        static::assertInstanceOf(MockInterface::class, $seenInsideTheScope);
+        static::assertNotSame($secondMockDto, $seenInsideTheScope);
+        static::assertSame($secondMockDto, $this->mockContainer->getMock(SecondMockDto::class));
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }

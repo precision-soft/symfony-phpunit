@@ -437,7 +437,7 @@ public function testFoo(): void
 
 ### Overriding a Mock for Part of a Test
 
-`withMock()` installs a mock for the duration of a callback and restores whatever was registered before — a mock instance, an unmaterialised `MockDto`, or nothing at all. The restore runs in a `finally`, so it also happens when the callback throws:
+`withMock()` installs a mock for the duration of a callback and leaves the container exactly as it found it afterwards: the previous registration of that class — a mock instance, an unmaterialised `MockDto`, or nothing at all — comes back, and so does everything else. Mocks created inside the scope (including those whose constructor consumed the override) are dropped and their `MockDto`s are pending again, so the next `get()` rebuilds them against the restored collaborators; a `registerMockDto()`/`registerMock()` made inside the scope does not outlive it. The restore runs in a `finally`, so it also happens when the callback throws:
 
 ```php
 use Mockery;
@@ -459,7 +459,7 @@ public function testFallbackPath(): void
 }
 ```
 
-The callback receives the override and the container, and `withMock()` returns whatever the callback returns. A mock that is not an instance of `$class` is rejected with `MockClassMismatchException`, exactly as in `registerMock()`.
+The callback receives the override and the container, and `withMock()` returns whatever the callback returns. A mock that is not an instance of `$class` is rejected with `MockClassMismatchException`, exactly as in `registerMock()`. Two consequences worth knowing: a mock resolved inside the scope and again after it is two different instances, so expectations set inside the scope do not carry over; and `withMock()` on a class that was never registered leaves nothing registered after the scope.
 
 ### Exceptions
 
@@ -502,7 +502,9 @@ Two directories in this package's own suite deliberately mirror nothing in `src/
 - **`SluggerInterfaceMock`** — `slug()` returns the raw input wrapped in `UnicodeString` without any slug transformation (no lowercasing, no dash-joining, no special character stripping). Tests that assert on slug format must override the expectation.
 - **Repositories** — `EntityManagerInterface::getRepository($entityName)` returns a per-entity Mockery mock cached for the lifetime of the `MockContainer`. Expectations set on one retrieval are seen on subsequent retrievals of the same entity.
 - **`MockDto::$partial`** — uses Mockery's `makePartial()`. The real constructor runs whenever `construct` is given, in partial and non-partial mode alike; it is only bypassed when `construct` is `null`, in which case the instance is created without constructor state. For classes whose real fall-through methods depend on constructor state, always pass `construct` with valid arguments.
-- **Parallel in-process execution** — the deprecated `ManagerRegistryMock::setManagedEntityClasses()` holds static state; use `configureManagedEntityClasses()` for per-mock scoping. All other state lives on `MockContainer` instances.
+- **Parallel in-process execution** — the deprecated `ManagerRegistryMock::setManagedEntityClasses()` holds static state that outlives the test which set it; a test class that still uses it must `use ManagerRegistryMockTrait`, whose `#[After]` hook resets it, or call `resetManagedEntityClasses()` itself. Prefer `configureManagedEntityClasses()` for per-mock scoping. All other state lives on `MockContainer` instances.
+- **Sub-mocks are created lazily** — a mock registered by another mock's `onCreate` (the `EntityManagerInterface`, `Connection`, `ClassMetadata`, … doubles that `ManagerRegistryMock` registers) is reachable through `get()` only after the mock that registers it has been resolved once.
+- **Factory and managed-class stubs are Mockery defaults** — `configureRepositoryFactory()`, `configureClassMetadataFactory()` and `configureManagedEntityClasses()` install `byDefault()` expectations: calling one of them again replaces the previous configuration (and its cache), and an explicit `shouldReceive()` set by the test afterwards always wins over them.
 - **`final` and `readonly` classes cannot be doubled through the container.** Mockery refuses `Mockery::mock(FinalThing::class)` outright, and the only double it can build for such a class is a proxied partial made from an instance (`Mockery::mock(new FinalThing())`) — which is not an instance of the class it proxies. `registerMock()` rejects it with `MockClassMismatchException`, because accepting it would make `getMock()` return something that is not the `MockInterface&T` it declares. Depend on an interface, or use the proxied partial directly instead of through the container.
 
 ## Exception context
@@ -526,6 +528,10 @@ One exception in this package populates it: `MockClassMismatchException` carries
 Every exception in the package implements `Contract\ExceptionInterface`, so a consumer can read the context off any of them without knowing the concrete class. A subclass of your own that already declares a `$context` property or a
 `getContext()`/`setContext()` method will collide with `Exception\Trait\ExceptionTrait`.
 
+## Example application
+
+A runnable product catalogue slice lives under [`.example/`](./.example/README.md): the smallest code that needs exactly the collaborators this package ships doubles for, and a test suite that shows every public capability on it — `AbstractTestCase`, `MockDto` in its three `construct` forms, the built-in mocks and their factories, `withMock()`, runtime registration and each exception, and `AbstractKernelTestCase` against a real micro-kernel. It installs the package from the working tree through a path repository, so it always tests the code as it stands; run it with `.dev/validate/all.sh --example` or `cd .example && composer install && composer check`. The directory is `export-ignore`d and never reaches a consumer's `vendor/`.
+
 ## Dev
 
 The development environment uses Docker. The `./dc` script is a Docker Compose wrapper located in `.dev/`.
@@ -543,8 +549,9 @@ Run the full gate the way the pre-commit hook runs it - the CI workflow in
 ```shell
 .dev/validate/all.sh
 .dev/validate/all.sh --audit        # also audits the locked dependencies ( needs the network )
+.dev/validate/all.sh --example      # also installs and checks the example application under .example/
 .dev/validate/all.sh --integration  # also runs the integration group, which composer test excludes
-.dev/validate/all.sh --staged       # what the pre-commit hook runs: nothing unless the index carries php
+.dev/validate/all.sh --staged       # what the pre-commit hook runs: only the sections the index touches
 ```
 
 Mutation testing is opt-in for the same reason, plus cost - it runs the suite once per mutant:
