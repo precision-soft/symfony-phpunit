@@ -24,21 +24,6 @@ final class SluggerInterfaceMockTest extends TestCase
 
     private MockContainer $mockContainer;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(SluggerInterfaceMock::getMockDto());
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
-
     public function testGetMockDtoTargetsSluggerInterface(): void
     {
         $mockDto = SluggerInterfaceMock::getMockDto();
@@ -90,5 +75,20 @@ final class SluggerInterfaceMockTest extends TestCase
         $result = $mockInterface->slug('any text');
 
         static::assertSame('any text', (string)$result);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(SluggerInterfaceMock::getMockDto());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }

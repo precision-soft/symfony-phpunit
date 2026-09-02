@@ -17,30 +17,41 @@ final class AbstractTestCaseFunctionalTest extends TestCase
 {
     private string $workingDirectory = '';
 
-    protected function setUp(): void
+    private static function getPackageRootPath(): string
     {
-        parent::setUp();
-
-        if (false === \is_file(static::getPhpunitBinaryPath())) {
-            static::markTestSkipped('the phpunit binary is not installed');
-        }
-
-        $workingDirectory = \sys_get_temp_dir() . '/symfony-phpunit-functional-' . \uniqid();
-
-        \mkdir($workingDirectory);
-
-        $this->workingDirectory = $workingDirectory;
+        return \dirname(__DIR__, 2);
     }
 
-    protected function tearDown(): void
+    private static function getPhpunitBinaryPath(): string
     {
-        if ('' !== $this->workingDirectory) {
-            static::removeDirectory($this->workingDirectory);
+        return static::getPackageRootPath() . '/vendor/phpunit/phpunit/phpunit';
+    }
 
-            $this->workingDirectory = '';
+    private static function removeDirectory(string $directoryPath): void
+    {
+        if (false === \is_dir($directoryPath)) {
+            return;
         }
 
-        parent::tearDown();
+        $entries = \scandir($directoryPath);
+
+        foreach (false === $entries ? [] : $entries as $entry) {
+            if ('.' === $entry || '..' === $entry) {
+                continue;
+            }
+
+            $entryPath = $directoryPath . '/' . $entry;
+
+            if (true === \is_dir($entryPath)) {
+                static::removeDirectory($entryPath);
+
+                continue;
+            }
+
+            \unlink($entryPath);
+        }
+
+        \rmdir($directoryPath);
     }
 
     public function testSetUpWiresTheMockContainerInARealPhpunitRun(): void
@@ -81,6 +92,32 @@ final class AbstractTestCaseFunctionalTest extends TestCase
 
         static::assertNotSame(0, $processResult['exitCode'], $processResult['output']);
         static::assertStringContainsString('slug', $processResult['output']);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (false === \is_file(static::getPhpunitBinaryPath())) {
+            static::markTestSkipped('the phpunit binary is not installed');
+        }
+
+        $workingDirectory = \sys_get_temp_dir() . '/symfony-phpunit-functional-' . \uniqid();
+
+        \mkdir($workingDirectory);
+
+        $this->workingDirectory = $workingDirectory;
+    }
+
+    protected function tearDown(): void
+    {
+        if ('' !== $this->workingDirectory) {
+            static::removeDirectory($this->workingDirectory);
+
+            $this->workingDirectory = '';
+        }
+
+        parent::tearDown();
     }
 
     private function writeGeneratedTest(string $testMethod): void
@@ -147,38 +184,4 @@ final class AbstractTestCaseFunctionalTest extends TestCase
         return ['exitCode' => $exitCode, 'output' => \implode("\n", $outputLines)];
     }
 
-    private static function getPackageRootPath(): string
-    {
-        return \dirname(__DIR__, 2);
-    }
-
-    private static function getPhpunitBinaryPath(): string
-    {
-        return static::getPackageRootPath() . '/vendor/phpunit/phpunit/phpunit';
-    }
-
-    private static function removeDirectory(string $directoryPath): void
-    {
-        if (false === \is_dir($directoryPath)) {
-            return;
-        }
-
-        foreach (\scandir($directoryPath) ?: [] as $entry) {
-            if ('.' === $entry || '..' === $entry) {
-                continue;
-            }
-
-            $entryPath = $directoryPath . '/' . $entry;
-
-            if (true === \is_dir($entryPath)) {
-                static::removeDirectory($entryPath);
-
-                continue;
-            }
-
-            \unlink($entryPath);
-        }
-
-        \rmdir($directoryPath);
-    }
 }

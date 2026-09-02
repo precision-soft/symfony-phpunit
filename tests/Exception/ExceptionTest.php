@@ -25,6 +25,17 @@ use PrecisionSoft\Symfony\Phpunit\Exception\MockNotFoundException;
  */
 final class ExceptionTest extends TestCase
 {
+    /** @return iterable<string, array{class-string<Exception>}> */
+    public static function provideSubclasses(): iterable
+    {
+        yield 'circular dependency' => [CircularDependencyException::class];
+        yield 'class not found' => [ClassNotFoundException::class];
+        yield 'mock already registered' => [MockAlreadyRegisteredException::class];
+        yield 'mock class mismatch' => [MockClassMismatchException::class];
+        yield 'mock container not initialized' => [MockContainerNotInitializedException::class];
+        yield 'mock not found' => [MockNotFoundException::class];
+    }
+
     public function testExceptionExtendsBaseException(): void
     {
         $exception = new Exception('test message');
@@ -36,17 +47,6 @@ final class ExceptionTest extends TestCase
     public function testExceptionImplementsExceptionInterface(): void
     {
         static::assertInstanceOf(ExceptionInterface::class, new Exception('test message'));
-    }
-
-    /** @return iterable<string, array{class-string<Exception>}> */
-    public static function provideSubclasses(): iterable
-    {
-        yield 'circular dependency' => [CircularDependencyException::class];
-        yield 'class not found' => [ClassNotFoundException::class];
-        yield 'mock already registered' => [MockAlreadyRegisteredException::class];
-        yield 'mock class mismatch' => [MockClassMismatchException::class];
-        yield 'mock container not initialized' => [MockContainerNotInitializedException::class];
-        yield 'mock not found' => [MockNotFoundException::class];
     }
 
     /** @param class-string<Exception> $class */

@@ -24,21 +24,6 @@ final class EventDispatcherInterfaceMockTest extends TestCase
 
     private MockContainer $mockContainer;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(EventDispatcherInterfaceMock::getMockDto());
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
-
     public function testGetMockDtoTargetsEventDispatcherInterface(): void
     {
         $mockDto = EventDispatcherInterfaceMock::getMockDto();
@@ -92,5 +77,20 @@ final class EventDispatcherInterfaceMockTest extends TestCase
         $result = $mockInterface->dispatch($event, 'custom.event.name');
 
         static::assertSame($event, $result);
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(EventDispatcherInterfaceMock::getMockDto());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }
