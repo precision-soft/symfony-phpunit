@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "765974ecdc9b4fd5028ce2d972c13d17",
+    "content-hash": "bebb68fc52d1935b5844b47f7f578925",
     "packages": [
         {
             "name": "hamcrest/hamcrest-php",
@@ -2458,11 +2458,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.2.11",
+            "version": "2.2.12",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/0eb899d48d9b784eee3f1b58a6c9dc79734cf811",
-                "reference": "0eb899d48d9b784eee3f1b58a6c9dc79734cf811",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/174b0d88710f00a42598886504dd7a146f91ace5",
+                "reference": "174b0d88710f00a42598886504dd7a146f91ace5",
                 "shasum": ""
             },
             "require": {
@@ -2518,7 +2518,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-31T10:33:10+00:00"
+            "time": "2026-08-31T19:09:43+00:00"
         },
         {
             "name": "phpstan/phpstan-mockery",
@@ -7003,5 +7003,8 @@
         "php": ">=8.2"
     },
     "platform-dev": {},
+    "platform-overrides": {
+        "php": "8.2"
+    },
     "plugin-api-version": "2.9.0"
 }
