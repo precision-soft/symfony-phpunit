@@ -122,8 +122,8 @@ class MockContainer
     {
         $this->assertMockClass($class, $mockInterface);
 
-        $previousMock = $this->mocks[$class] ?? null;
-        $previousMockDto = $this->mockDtos[$class] ?? null;
+        $mockDtosBeforeTheScope = $this->mockDtos;
+        $mocksBeforeTheScope = $this->mocks;
 
         $this->mocks[$class] = $mockInterface;
         unset($this->mockDtos[$class]);
@@ -131,14 +131,9 @@ class MockContainer
         try {
             return $callback($mockInterface, $this);
         } finally {
-            unset($this->mocks[$class]);
-
-            if (null !== $previousMock) {
-                $this->mocks[$class] = $previousMock;
-            }
-
-            if (null !== $previousMockDto) {
-                $this->mockDtos[$class] = $previousMockDto;
+            if (true === isset($this->mocks[$class])) {
+                $this->mockDtos = $mockDtosBeforeTheScope;
+                $this->mocks = $mocksBeforeTheScope;
             }
         }
     }

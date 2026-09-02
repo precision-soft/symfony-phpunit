@@ -210,18 +210,22 @@ final class ProductCatalogServiceTest extends AbstractTestCase
             ->with('Espresso Machine')
             ->andReturn(new UnicodeString('espresso-machine'));
 
+        $scopedProductCatalogService = null;
+
         $product = $this->withMock(
             SluggerInterface::class,
             $sluggerMock,
-            static function (MockInterface $mockInterface, MockContainer $mockContainer): Product {
-                $productCatalogService = $mockContainer->getMock(ProductCatalogService::class);
+            static function (MockInterface $mockInterface, MockContainer $mockContainer) use (
+                &$scopedProductCatalogService,
+            ): Product {
+                $scopedProductCatalogService = $mockContainer->getMock(ProductCatalogService::class);
 
                 $mockContainer->getMock(EventDispatcherInterface::class)
                     ->shouldReceive('dispatch')
                     ->once()
                     ->andReturnUsing(static fn(object $event): object => $event);
 
-                return $productCatalogService->create('Espresso Machine', 7, 24900);
+                return $scopedProductCatalogService->create('Espresso Machine', 7, 24900);
             },
         );
 
@@ -231,6 +235,11 @@ final class ProductCatalogServiceTest extends AbstractTestCase
 
         static::assertNotSame($sluggerMock, $restoredSluggerMock);
         static::assertSame('Espresso Machine', $restoredSluggerMock->slug('Espresso Machine')->toString());
+
+        $productCatalogService = $this->get(ProductCatalogService::class);
+
+        static::assertNotSame($scopedProductCatalogService, $productCatalogService);
+        static::assertSame('grinder', $productCatalogService->create('Grinder', 7, 8900)->getSlug());
     }
 
     public function testTheNestedCategoryServiceSharesTheManagerRegistryMock(): void

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `MockContainer::withMock()` now leaves the container **exactly as it found it**: both registries (materialised mocks and pending `MockDto`s) are snapshotted before the override is installed and restored wholesale afterwards, also when the callback throws. Before, only the overridden class was restored, so a mock created inside the scope — one whose constructor had consumed the temporary override, or any pending `MockDto` resolved for the first time inside the callback — survived the scope built against the wrong collaborator, and its `MockDto` was gone. Consumers can observe the change in two ways: a mock resolved inside the scope and again after it is now two instances (the second one built with the restored collaborators), and a `registerMockDto()`/`registerMock()` made inside the scope does not outlive it. `close()` inside the callback is honoured too: nothing is resurrected afterwards
+
+### Fixed
+
+- `ManagerRegistryMock::configureRepositoryFactory()`, `configureClassMetadataFactory()` and `configureManagedEntityClasses()` install their expectations with `byDefault()`, like every other stub in the class. Without it, Mockery matched the first expectation in insertion order, so a second call on the same mock was silently ignored (the first factory and its cache stayed active) and an explicit `shouldReceive()` set by the test afterwards lost to the factory. Now the newest configuration wins and an explicit expectation always overrides the default
+
 ### Added
 
 - `.example/` — a runnable product catalogue slice whose test suite exercises every public capability of the package (`AbstractTestCase`, the three `MockDto` `construct` forms, the built-in mocks and their factories, `withMock()`, runtime registration and every exception, `AbstractKernelTestCase` against a real micro-kernel). It installs the package from the working tree through a path repository and is gated by `.dev/validate/all.sh --example` and the `example` CI job; the directory is `export-ignore`d, so nothing reaches a consumer's `vendor/`

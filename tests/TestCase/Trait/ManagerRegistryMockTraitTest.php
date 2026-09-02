@@ -11,6 +11,7 @@ namespace PrecisionSoft\Symfony\Phpunit\Test\TestCase\Trait;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 use PrecisionSoft\Symfony\Phpunit\Container\MockContainer;
 use PrecisionSoft\Symfony\Phpunit\Mock\ManagerRegistryMock;
@@ -25,21 +26,6 @@ final class ManagerRegistryMockTraitTest extends TestCase
     use MockeryPHPUnitIntegration;
 
     private MockContainer $mockContainer;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
 
     public function testSetManagedEntityClassesRestrictsGetManagerForClass(): void
     {
@@ -84,5 +70,40 @@ final class ManagerRegistryMockTraitTest extends TestCase
             EntityManagerInterface::class,
             $managerRegistry->getManagerForClass(stdClass::class),
         );
+    }
+
+    public function testTheHookRunsBetweenTestsWithoutBeingCalled(): void
+    {
+        $managerRegistry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        ManagerRegistryMock::setManagedEntityClasses([EntityWithSetId::class]);
+
+        static::assertNull($managerRegistry->getManagerForClass(stdClass::class));
+    }
+
+    #[Depends('testTheHookRunsBetweenTestsWithoutBeingCalled')]
+    public function testTheDefaultFallbackIsBackInTheNextTest(): void
+    {
+        $managerRegistry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        static::assertInstanceOf(
+            EntityManagerInterface::class,
+            $managerRegistry->getManagerForClass(stdClass::class),
+        );
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }

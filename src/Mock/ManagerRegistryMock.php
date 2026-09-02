@@ -64,6 +64,7 @@ class ManagerRegistryMock implements MockDtoInterface
         $entityManagerMock = $managerRegistryMock->getManager();
 
         $managerRegistryMock->shouldReceive('getManagerForClass')
+            ->byDefault()
             ->andReturnUsing(
                 static function (string $className) use ($entityManagerMock, $classSet): ?object {
                     if (true === isset($classSet[$className])) {
@@ -189,6 +190,7 @@ class ManagerRegistryMock implements MockDtoInterface
         $mocksByEntityClass = [];
 
         $entityManagerMock->shouldReceive($methodName)
+            ->byDefault()
             ->andReturnUsing(
                 static function (string $entityClass) use (
                     &$mocksByEntityClass,

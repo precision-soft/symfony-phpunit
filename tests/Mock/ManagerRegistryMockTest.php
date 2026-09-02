@@ -39,21 +39,6 @@ final class ManagerRegistryMockTest extends TestCase
 
     private MockContainer $mockContainer;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mockContainer = new MockContainer();
-        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mockContainer->close();
-
-        parent::tearDown();
-    }
-
     public function testGetMockDtoTargetsManagerRegistry(): void
     {
         $mockDto = ManagerRegistryMock::getMockDto();
@@ -539,5 +524,47 @@ final class ManagerRegistryMockTest extends TestCase
         $registry = $this->mockContainer->getMock(ManagerRegistry::class);
 
         static::assertInstanceOf(Connection::class, $registry->getConnection());
+    }
+
+    public function testReconfiguringTheManagedEntityClassesReplacesThePreviousSet(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [EntityWithSetId::class]);
+
+        static::assertNull($registry->getManagerForClass(stdClass::class));
+
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [stdClass::class]);
+
+        static::assertInstanceOf(EntityManagerInterface::class, $registry->getManagerForClass(stdClass::class));
+        static::assertNull($registry->getManagerForClass(EntityWithSetId::class));
+    }
+
+    public function testAnExplicitExpectationOverridesTheManagedEntityClasses(): void
+    {
+        $registry = $this->mockContainer->getMock(ManagerRegistry::class);
+
+        ManagerRegistryMock::configureManagedEntityClasses($registry, [stdClass::class]);
+
+        $registry->shouldReceive('getManagerForClass')
+            ->with(stdClass::class)
+            ->andReturnNull();
+
+        static::assertNull($registry->getManagerForClass(stdClass::class));
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockContainer = new MockContainer();
+        $this->mockContainer->registerMockDto(ManagerRegistryMock::getMockDto());
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mockContainer->close();
+
+        parent::tearDown();
     }
 }
