@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `.example/` — a runnable product catalogue slice whose test suite exercises every public capability of the package (`AbstractTestCase`, the three `MockDto` `construct` forms, the built-in mocks and their factories, `withMock()`, runtime registration and every exception, `AbstractKernelTestCase` against a real micro-kernel). It installs the package from the working tree through a path repository and is gated by `.dev/validate/all.sh --example` and the `example` CI job; the directory is `export-ignore`d, so nothing reaches a consumer's `vendor/`
+
 ## [v3.6.0] - 2026-08-31 - Scoped mock overrides, per-entity Doctrine factories and Symfony 8 support
 
 ### Added

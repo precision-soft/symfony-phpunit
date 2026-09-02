@@ -526,6 +526,10 @@ One exception in this package populates it: `MockClassMismatchException` carries
 Every exception in the package implements `Contract\ExceptionInterface`, so a consumer can read the context off any of them without knowing the concrete class. A subclass of your own that already declares a `$context` property or a
 `getContext()`/`setContext()` method will collide with `Exception\Trait\ExceptionTrait`.
 
+## Example application
+
+A runnable product catalogue slice lives under [`.example/`](./.example/README.md): the smallest code that needs exactly the collaborators this package ships doubles for, and a test suite that shows every public capability on it — `AbstractTestCase`, `MockDto` in its three `construct` forms, the built-in mocks and their factories, `withMock()`, runtime registration and each exception, and `AbstractKernelTestCase` against a real micro-kernel. It installs the package from the working tree through a path repository, so it always tests the code as it stands; run it with `.dev/validate/all.sh --example` or `cd .example && composer install && composer check`. The directory is `export-ignore`d and never reaches a consumer's `vendor/`.
+
 ## Dev
 
 The development environment uses Docker. The `./dc` script is a Docker Compose wrapper located in `.dev/`.
@@ -543,8 +547,9 @@ Run the full gate the way the pre-commit hook runs it - the CI workflow in
 ```shell
 .dev/validate/all.sh
 .dev/validate/all.sh --audit        # also audits the locked dependencies ( needs the network )
+.dev/validate/all.sh --example      # also installs and checks the example application under .example/
 .dev/validate/all.sh --integration  # also runs the integration group, which composer test excludes
-.dev/validate/all.sh --staged       # what the pre-commit hook runs: nothing unless the index carries php
+.dev/validate/all.sh --staged       # what the pre-commit hook runs: only the sections the index touches
 ```
 
 Mutation testing is opt-in for the same reason, plus cost - it runs the suite once per mutant:
