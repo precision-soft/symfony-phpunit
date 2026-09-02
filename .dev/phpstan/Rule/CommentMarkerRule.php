@@ -9,11 +9,11 @@ declare(strict_types=1);
 namespace PrecisionSoft\Dev\PhpStan\Rule;
 
 use PhpParser\Node;
-use PhpToken;
 use PHPStan\Analyser\Scope;
 use PHPStan\Node\FileNode;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PhpToken;
 
 /** @implements Rule<FileNode> */
 class CommentMarkerRule implements Rule

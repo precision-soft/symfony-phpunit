@@ -6,7 +6,9 @@ namespace PrecisionSoft\Dev\PhpStan\Test\Fixture\AccessorName;
 
 class Clean implements ReadinessInterface
 {
-    public function __construct(protected bool $ready = false) {}
+    public function __construct(protected bool $ready = false)
+    {
+    }
 
     public function isReady(): bool
     {

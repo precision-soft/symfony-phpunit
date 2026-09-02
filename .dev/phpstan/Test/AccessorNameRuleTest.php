@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\AccessorNameRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,11 +21,13 @@ final class AccessorNameRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/AccessorName/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/AccessorName/Violation.php'],
+            [$fixture],
             [
-                ['public method `isReady()` must not use the `is` prefix, name it `getReady()` or `hasReady()`', 11],
-                ['public method `is2faEnabled()` must not use the `is` prefix, name it `get2faEnabled()` or `has2faEnabled()`', 16],
+                ['public method `isReady()` must not use the `is` prefix, name it `getReady()` or `hasReady()`', FixtureLine::getLine($fixture, 'function isReady()')],
+                ['public method `is2faEnabled()` must not use the `is` prefix, name it `get2faEnabled()` or `has2faEnabled()`', FixtureLine::getLine($fixture, 'function is2faEnabled()')],
             ],
         );
     }

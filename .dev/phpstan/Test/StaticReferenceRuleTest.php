@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\StaticReferenceRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,13 +21,15 @@ final class StaticReferenceRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/StaticReference/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/StaticReference/Violation.php'],
+            [$fixture],
             [
-                ['`self::` must be `static::` where late static binding is legal', 14],
-                ['`self::` must be `static::` where late static binding is legal', 19],
-                ['`self::` must be `static::` where late static binding is legal', 21],
-                ['`self::` must be `static::` where late static binding is legal', 21],
+                ['`self::` must be `static::` where late static binding is legal', FixtureLine::getLine($fixture, 'new self()')],
+                ['`self::` must be `static::` where late static binding is legal', FixtureLine::getLine($fixture, 'self::$counter++')],
+                ['`self::` must be `static::` where late static binding is legal', FixtureLine::getLine($fixture, 'self::NAME . self::describe()')],
+                ['`self::` must be `static::` where late static binding is legal', FixtureLine::getLine($fixture, 'self::NAME . self::describe()')],
             ],
         );
     }

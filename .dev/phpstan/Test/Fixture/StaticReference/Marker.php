@@ -9,5 +9,7 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD)]
 class Marker
 {
-    public function __construct(public string $value = self::class) {}
+    public function __construct(public string $value = self::class)
+    {
+    }
 }

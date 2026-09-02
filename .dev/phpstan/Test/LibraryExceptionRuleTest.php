@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\LibraryExceptionRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,11 +21,13 @@ final class LibraryExceptionRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/LibraryException/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/LibraryException/Violation.php'],
+            [$fixture],
             [
-                ['built-in exception `InvalidArgumentException` must not be thrown, use a project-specific exception', 14],
-                ['built-in exception `RuntimeException` must not be thrown, use a project-specific exception', 17],
+                ['built-in exception `InvalidArgumentException` must not be thrown, use a project-specific exception', FixtureLine::getLine($fixture, 'throw new InvalidArgumentException')],
+                ['built-in exception `RuntimeException` must not be thrown, use a project-specific exception', FixtureLine::getLine($fixture, 'throw new \\RuntimeException')],
             ],
         );
     }

@@ -21,7 +21,9 @@ abstract class Clean implements Countable
 
     abstract protected function describe(): string;
 
-    public function __construct(protected string $name) {}
+    public function __construct(protected string $name)
+    {
+    }
 
     public function __toString(): string
     {

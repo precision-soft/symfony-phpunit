@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\LibraryVisibilityRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,12 +21,14 @@ final class LibraryVisibilityRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/LibraryVisibility/Src/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/LibraryVisibility/Src/Violation.php'],
+            [$fixture],
             [
-                ['library class `Violation` must not be final', 7],
-                ['library method `run()` must not be final', 9],
-                ['library method `describe()` must be protected, not private', 14],
+                ['library class `Violation` must not be final', FixtureLine::getLine($fixture, 'final class Violation')],
+                ['library method `run()` must not be final', FixtureLine::getLine($fixture, 'final public function run()')],
+                ['library method `describe()` must be protected, not private', FixtureLine::getLine($fixture, 'private function describe()')],
             ],
         );
     }

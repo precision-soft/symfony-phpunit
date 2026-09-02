@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\MessageCaseRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,13 +21,15 @@ final class MessageCaseRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/MessageCase/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/MessageCase/Violation.php'],
+            [$fixture],
             [
-                ['message must be lowercase, found `Unable`', 16],
-                ['message must be lowercase, found `Fixture`', 17],
-                ['message must be lowercase, found `Loading`', 18],
-                ['message must be lowercase, found `Fixture`', 20],
+                ['message must be lowercase, found `Unable`', FixtureLine::getLine($fixture, 'error(\'Unable')],
+                ['message must be lowercase, found `Fixture`', FixtureLine::getLine($fixture, '\'Fixture `%s` is missing\'')],
+                ['message must be lowercase, found `Loading`', FixtureLine::getLine($fixture, 'info("Loading')],
+                ['message must be lowercase, found `Fixture`', FixtureLine::getLine($fixture, '\'Fixture %s is broken\'')],
             ],
         );
     }

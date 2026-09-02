@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\YodaComparisonRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,13 +21,15 @@ final class YodaComparisonRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/YodaComparison/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/YodaComparison/Violation.php'],
+            [$fixture],
             [
-                ['write the constant on the left side of the comparison (yoda style)', 14],
-                ['write the constant on the left side of the comparison (yoda style)', 18],
-                ['write the constant on the left side of the comparison (yoda style)', 22],
-                ['write the constant on the left side of the comparison (yoda style)', 26],
+                ['write the constant on the left side of the comparison (yoda style)', FixtureLine::getLine($fixture, '$value === null')],
+                ['write the constant on the left side of the comparison (yoda style)', FixtureLine::getLine($fixture, '$items == []')],
+                ['write the constant on the left side of the comparison (yoda style)', FixtureLine::getLine($fixture, '$count !== -1')],
+                ['write the constant on the left side of the comparison (yoda style)', FixtureLine::getLine($fixture, '$count != static::LIMIT')],
             ],
         );
     }

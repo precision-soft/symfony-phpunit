@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v3.7.0] - 2026-09-02 - withMock () restores the whole registry, overridable Doctrine factory stubs and the house-style gate
+
 ### Changed
 
 - `MockContainer::withMock()` now leaves the container **exactly as it found it**: both registries (materialised mocks and pending `MockDto`s) are snapshotted before the override is installed and restored wholesale afterwards, also when the callback throws. Before, only the overridden class was restored, so a mock created inside the scope — one whose constructor had consumed the temporary override, or any pending `MockDto` resolved for the first time inside the callback — survived the scope built against the wrong collaborator, and its `MockDto` was gone. Consumers can observe the change in two ways: a mock resolved inside the scope and again after it is now two instances (the second one built with the restored collaborators), and a `registerMockDto()`/`registerMock()` made inside the scope does not outlive it. `close()` inside the callback is honoured too: nothing is resurrected afterwards
@@ -474,7 +476,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Built-in mocks: `ManagerRegistryMock`, `SluggerInterfaceMock`, `EventDispatcherInterfaceMock`
 - Dev infrastructure (Docker compose, pre-commit hook, utility scripts) under `dev/`
 
-[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.6.0...HEAD
+[Unreleased]: https://github.com/precision-soft/symfony-phpunit/compare/v3.7.0...HEAD
+[v3.7.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.6.0...v3.7.0
 
 [v3.6.0]: https://github.com/precision-soft/symfony-phpunit/compare/v3.5.0...v3.6.0
 

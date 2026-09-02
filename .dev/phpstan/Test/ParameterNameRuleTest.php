@@ -11,6 +11,7 @@ namespace PrecisionSoft\Dev\PhpStan\Test;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PrecisionSoft\Dev\PhpStan\Rule\ParameterNameRule;
+use PrecisionSoft\Dev\PhpStan\Test\Utility\FixtureLine;
 
 /**
  * @internal
@@ -20,12 +21,14 @@ final class ParameterNameRuleTest extends RuleTestCase
 {
     public function testViolation(): void
     {
+        $fixture = __DIR__ . '/Fixture/ParameterName/Violation.php';
+
         $this->analyse(
-            [__DIR__ . '/Fixture/ParameterName/Violation.php'],
+            [$fixture],
             [
-                ['name `$config` is an abbreviation, write the full word', 12],
-                ['name `$value1` is numbered, give each variable a descriptive name', 12],
-                ['name `$e` is an abbreviation, write the full word', 16],
+                ['name `$config` is an abbreviation, write the full word', FixtureLine::getLine($fixture, 'run(array $config')],
+                ['name `$value1` is numbered, give each variable a descriptive name', FixtureLine::getLine($fixture, 'run(array $config')],
+                ['name `$e` is an abbreviation, write the full word', FixtureLine::getLine($fixture, 'catch (Throwable $e)')],
             ],
         );
     }
